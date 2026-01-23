@@ -9,40 +9,39 @@ public class FlipFitApplication {
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
 
-        while (!exit) {
+        do {
+            System.out.println("\n========================================");
             System.out.println("      Welcome to FlipFit Application    ");
+            System.out.println("========================================");
             System.out.println("Type one of the following options:");
-            System.out.println(" > LOGIN (To access your dashboard)");
-            System.out.println(" > OWNER (Registration for Gym Owners)");
+            System.out.println(" > LOGIN    (To access your dashboard)");
+            System.out.println(" > OWNER    (Registration for Gym Owners)");
             System.out.println(" > CUSTOMER (Registration for Customers)");
             System.out.println(" > EXIT");
             System.out.print("\nEnter your choice: ");
 
-            // Using nextLine() and toLowerCase() prevents InputMismatchException
             String choice = scanner.next().toLowerCase();
 
-            switch (choice) {
-                case "login":
-                    login(scanner);
-                    break;
-
-                case "owner":
-                    registerOwner(scanner);
-                    break;
-
-                case "customer":
-                    registerCustomer(scanner);
-                    break;
-
-                case "exit":
-                    exit = true;
-                    System.out.println("Exiting FlipFit.. Goodbye!");
-                    break;
-
-                default:
-                    System.out.println("Invalid choice. Please type 'Login', 'Owner', 'Customer', or 'Exit'.");
+            // Using if-else
+            if (choice.equals("login")) {
+                login(scanner);
             }
-        }
+            else if (choice.equals("owner")) {
+                registerOwner(scanner);
+            }
+            else if (choice.equals("customer")) {
+                registerCustomer(scanner);
+            }
+            else if (choice.equals("exit")) {
+                exit = true;
+                System.out.println("Exiting FlipFit.. Goodbye!");
+            }
+            else {
+                System.out.println("Invalid choice. Please type 'Login', 'Owner', 'Customer', or 'Exit'.");
+            }
+
+        } while (!exit); // Loop continues until exit is true
+
         scanner.close();
     }
 
