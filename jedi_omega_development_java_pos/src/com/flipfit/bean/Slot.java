@@ -3,8 +3,7 @@ package com.flipfit.bean;
 public class Slot {
 	private String slotId;
 	private int capacity;
-	private int bookedSeat;
-	private 
+	private int bookedSeat; 
 	
 	public String getSlotId() {
 		return slotId;
@@ -24,6 +23,13 @@ public class Slot {
 	public void setBookedSeat(int bookedSeat) {
 		this.bookedSeat = bookedSeat;
 	}
+	public boolean checkAvailability() {
+		return bookedSeat < capacity;
+	}
+	public int getAvailableSeats() {
+		return capacity-bookedSeat;
+	}
+	
 
 	
 
