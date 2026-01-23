@@ -5,10 +5,11 @@ out/
 target/
 build/
 .gradle/
-classpath
-project
-settings/
-springBeans
+.classpath
+.project
+.settings/
+.springBeans
+.idea/
 *.iml
 *.log
 
