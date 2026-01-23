@@ -16,6 +16,8 @@ public class User {
 	private String email;
 	private String phone;
 	
+	private Role role;
+	
 	
 	public String getUserId() {
 		return userId;
@@ -40,6 +42,12 @@ public class User {
 	}
 	public void setPhone(String phone) {
 		this.phone = phone;
+	}
+	public Role getRole() {
+		return role;
+	}
+	public void setRole(Role role) {
+		this.role = role;
 	}
 
 }
