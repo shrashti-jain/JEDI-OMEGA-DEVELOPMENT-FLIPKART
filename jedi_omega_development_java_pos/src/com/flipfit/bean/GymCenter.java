@@ -2,7 +2,7 @@ package com.flipfit.bean;
 
 public class GymCenter {
 	private String centerId;
-	private String name;
+	private String centerName;
 	private String location;
 	private String city;
 	
