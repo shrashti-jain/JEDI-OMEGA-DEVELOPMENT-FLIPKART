@@ -1,4 +1,4 @@
-package com.flipkart.bean;
+package com.flipfit.bean;
 
 //Role table associates with User 
 
