@@ -4,6 +4,7 @@ public class Slot {
 	private String slotId;
 	private int capacity;
 	private int bookedSeat;
+	private 
 	
 	public String getSlotId() {
 		return slotId;
