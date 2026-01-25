@@ -5,7 +5,22 @@ public class GymCenter {
 	private String centerName;
 	private String location;
 	private String city;
-	
+
+	public GymCenter(){}
+
+	public GymCenter(String centerId,String name, String location, String city){
+		this.centerId=centerId;
+		this.name=name;
+		this.location=location;
+		this.city=city;
+	}
+
+	public void addSlot(Slot slot){}
+
+	public List<Slot> getSlotByDate(String date){
+		return null;
+	}
+
 	public String getCenterId() {
 		return centerId;
 	}
@@ -30,7 +45,4 @@ public class GymCenter {
 	public void setCity(String city) {
 		this.city = city;
 	}
-	
-	
-
 }

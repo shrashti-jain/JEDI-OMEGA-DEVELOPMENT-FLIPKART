@@ -16,9 +16,19 @@ public class User {
 	private String email;
 	private String phone;
 	
-	private Role role;
+	public User(){}
+
+	public User(String userId, String name, String email, String phone){
+		this.userId=userId;
+		this.name=name;
+		this.email=email;
+		this.phone=phone;
+	}
 	
-	
+	public void register(){}
+	public void login(){}
+	public void logout(){}
+
 	public String getUserId() {
 		return userId;
 	}
@@ -42,12 +52,6 @@ public class User {
 	}
 	public void setPhone(String phone) {
 		this.phone = phone;
-	}
-	public Role getRole() {
-		return role;
-	}
-	public void setRole(Role role) {
-		this.role = role;
 	}
 
 }

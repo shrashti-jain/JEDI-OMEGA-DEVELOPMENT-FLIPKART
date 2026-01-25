@@ -34,6 +34,13 @@ public class Scheduler {
 	public void setEndTime(LocalTime endTime) {
 		this.endTime = endTime;
 	}
+
+
+	public boolean checkAlreadyBooked(){
+		return false;
+	}
+	public void cancelPrevious(){}
+	public void bookSeat(){}
 	
 	
 }

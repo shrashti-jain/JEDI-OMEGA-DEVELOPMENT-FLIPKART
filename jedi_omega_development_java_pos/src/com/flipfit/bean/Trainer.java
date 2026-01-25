@@ -4,8 +4,17 @@ public class Trainer {
 	
 	private String trainerId;
 	private String name;
-	private String Specialization;
+	private String specialization;
 	private String contact;
+
+	public Trainer(){}
+
+	public Trainer(String trainerId, String name,String specialization, String contact){
+		this.trainerId=trainerId;
+		this.name=name;
+		this.specialization=specialization;
+		this.contact=contact;
+	}
 	
 	public String getTrainerId() {
 		return trainerId;
@@ -31,5 +40,4 @@ public class Trainer {
 	public void setContact(String contact) {
 		this.contact = contact;
 	}
-	
 }
