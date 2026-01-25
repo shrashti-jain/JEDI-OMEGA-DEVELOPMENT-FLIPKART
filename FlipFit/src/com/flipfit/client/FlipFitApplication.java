@@ -17,20 +17,29 @@ public class FlipFitApplication {
             System.out.println(" > LOGIN    (To access your dashboard)");
             System.out.println(" > OWNER    (Registration for Gym Owners)");
             System.out.println(" > CUSTOMER (Registration for Customers)");
+            System.out.println(" > CHANGE PASSWORD ");
             System.out.println(" > EXIT");
             System.out.print("\nEnter your choice: ");
 
-            String choice = scanner.next().toLowerCase();
+            String choice = scanner.nextLine().toLowerCase();
+            System.out.println(choice);
 
             // Using if-else
             if (choice.equals("login")) {
+                exit = true;
                 login(scanner);
             }
             else if (choice.equals("owner")) {
+                exit = true;
                 registerOwner(scanner);
             }
             else if (choice.equals("customer")) {
+                exit = true;
                 registerCustomer(scanner);
+            }
+            else if (choice.equals("change password") || choice.equals("change pass")) {
+                exit = true;
+                changePassword(scanner);
             }
             else if (choice.equals("exit")) {
                 exit = true;
@@ -46,46 +55,80 @@ public class FlipFitApplication {
     }
 
     private static void login(Scanner scanner) {
-        System.out.println("\n--- Login Page ---");
-        System.out.print("Enter Email: ");
-        String email = scanner.next();
+        System.out.print("Enter Username: ");
+        String username = scanner.next();
         System.out.print("Enter Password: ");
         String password = scanner.next();
+        System.out.print("Enter Role: ");
+        String role = scanner.next(); // takes role as input
 
-        // MOCK AUTHENTICATION (In real app, call userService.login(email, password))
-        System.out.println("Authenticating " + email + "...");
+        switch (role) {
+            case "customer":
+                System.out.println("Login Successful as Customer!");
+                GymFlipFitCustomerMenu.showCustomerMenu(scanner, username); //
+                break;
 
-        // This is where you decide which menu to show based on the user role
-        System.out.print("Enter Role for Testing (Admin/Owner/Customer): ");
-        String role = scanner.next();
+            case "owner":
+                System.out.println("Login Successful as Gym Owner!");
+                GymFlipFitOwnerMenu.showOwnerMenu(scanner); //
+                break;
 
-        if (role.equalsIgnoreCase("Customer")) {
-            System.out.println("Login Successful!");
-            GymFlipFitCustomerMenu.showCustomerMenu(scanner, email); // Passes email as userId
-        } else if (role.equalsIgnoreCase("Owner")) {
-            System.out.println("Login Successful!");
-            GymFlipFitOwnerMenu.showOwnerMenu(scanner); //
-        } else if (role.equalsIgnoreCase("Admin")) {
-            System.out.println("Login Successful!");
-            GymFlipFitAdminMenu.showAdminMenu(scanner); //
-        } else {
-            System.out.println("Invalid Role. Access Denied.");
+            case "admin":
+                System.out.println("Login Successful as Admin!");
+                GymFlipFitAdminMenu.showAdminMenu(scanner); //
+                break;
+
+            default:
+                System.out.println("Invalid Role. Access Denied.");
+                break;
         }
     }
 
     private static void registerCustomer(Scanner scanner) {
         System.out.println("\n--- Customer Registration ---");
-        System.out.print("Enter Full Name: ");
-        String name = scanner.next();
-        // Here you would call your business service: customerService.register(...)
-        System.out.println("Registration Successful for " + name + "! You can now Login.");
+        System.out.print("Full Name: "); String name = scanner.next();
+        System.out.print("Email: "); String email = scanner.next();
+        System.out.print("Password: "); String pass = scanner.next();
+        System.out.print("Address: "); String addr = scanner.next();
+        System.out.print("City: "); String city = scanner.next();
+
+        // Logic to save these details to GymCustomer bean goes here
+        System.out.println("Customer registered successfully!");
     }
 
     private static void registerOwner(Scanner scanner) {
         System.out.println("\n--- Gym Owner Registration ---");
-        System.out.print("Enter Gym Name: ");
-        String gymName = scanner.next();
-        // Here you would call your business service: ownerService.register(...)
-        System.out.println("Registration Successful for " + gymName + "! Waiting for Admin Approval.");
+        System.out.print("Full Name: "); String name = scanner.next();
+        System.out.print("Email: "); String email = scanner.next();
+        System.out.print("Password: "); String pass = scanner.next();
+        System.out.print("Gym Center Name: "); String gymName = scanner.next();
+        System.out.print("Gym Address: "); String addr = scanner.next();
+        System.out.print("City: "); String city = scanner.next();
+
+        // Logic to save these details to GymOwner bean goes here
+        System.out.println("Owner registered successfully!");
+
+
+        //Enter mail, previous pass---> forgot pass, new pass, confirm pass.
+        //new pass, confirm pass
+    }
+
+    private static void changePassword(Scanner scanner) {
+        System.out.println("\n--- Change Password ---");
+        System.out.print("Enter User Name (Email): ");
+        String userName = scanner.next();
+
+        System.out.print("Enter New Password: ");
+        String newPass = scanner.next();
+
+        System.out.print("Confirm New Password: ");
+        String confirmPass = scanner.next();
+
+        if (newPass.equals(confirmPass)) {
+            // Logic to update the user's bean/DB would go here
+            System.out.println("Password changed successfully for " + userName);
+        } else {
+            System.out.println("Error: Passwords do not match. Please try again.");
+        }
     }
 }
