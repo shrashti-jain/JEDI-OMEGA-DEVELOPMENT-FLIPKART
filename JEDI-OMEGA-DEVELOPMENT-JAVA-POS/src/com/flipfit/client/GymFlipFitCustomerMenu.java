@@ -30,7 +30,7 @@ public class GymFlipFitCustomerMenu {
                 case 2 -> viewSlots(scanner);
                 case 3 -> createBooking(scanner, userId);
                 case 4 -> viewBookings(userId);
-                case 5 -> cancelBooking(scanner);
+                case 5 -> cancelBooking(scanner,userId);
                 case 6 -> { System.out.println("Logging out..."); exit = true; }
                 default -> System.out.println("Invalid option.");
             }
@@ -72,6 +72,33 @@ public class GymFlipFitCustomerMenu {
 
         try {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+            // A. Get the Slot details first to know the time
+            Slot selectedSlot = GymOwnerImpl.getSlotById(slotId);
+            if (selectedSlot == null) {
+                System.out.println("Slot not found.");
+                return;
+            }
+            String slotTime = selectedSlot.getStartTime() + " - " + selectedSlot.getEndTime();
+
+            // B. Check for Conflict
+            Booking conflict = customerService.checkConflict(userId, date, slotTime);
+
+            if (conflict != null) {
+                System.out.println("\n[CONFLICT] You already have a booking at " + slotTime + " in " + conflict.getGymName());
+                System.out.print("Would you like to cancel the previous booking and proceed? (yes/no): ");
+                String confirm = scanner.next().toLowerCase();
+                scanner.nextLine();
+
+                if (confirm.equals("yes")) {
+                    customerService.cancelBooking(conflict.getBookingId());
+                    System.out.println("Previous booking cancelled.");
+                } else {
+                    System.out.println("New booking aborted.");
+                    return;
+                }
+            }
+
+            // C. Finally, call the actual booking method
             Booking booking = customerService.bookSlot(userId, slotId, centerId, date);
             if (booking != null) {
                 System.out.println("Booking Success! ID: " + booking.getBookingId());
@@ -104,9 +131,30 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
-    private static void cancelBooking(Scanner scanner) {
-        System.out.print("Enter Booking ID: ");
+    private static void cancelBooking(Scanner scanner, String userEmail) {
+        // 1. Show the user their current bookings so they know the IDs
+        List<Booking> myBookings = customerService.viewBookings(userEmail);
+
+        if (myBookings.isEmpty()) {
+            System.out.println("You have no active bookings to cancel.");
+            return;
+        }
+
+        System.out.println("\n--- Your Active Bookings ---");
+        myBookings.forEach(b -> System.out.println("ID: " + b.getBookingId() + " | Gym: " + b.getGymName() + " | Status: " + b.getStatus()));
+
+        // 2. Ask for the ID to cancel
+        System.out.print("\nEnter the Booking ID you wish to cancel: ");
         String bid = scanner.next();
-        if (customerService.cancelBooking(bid)) System.out.println("Cancelled successfully.");
+        scanner.nextLine(); // Clear the buffer
+
+        // 3. Call the service
+        boolean isCancelled = customerService.cancelBooking(bid);
+
+        if (isCancelled) {
+            System.out.println("SUCCESS: Your booking has been cancelled and the seat is now available for others.");
+        } else {
+            System.out.println("FAILURE: Could not cancel booking. Please check the ID and try again.");
+        }
     }
 }

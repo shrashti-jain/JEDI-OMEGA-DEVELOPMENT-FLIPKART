@@ -43,7 +43,7 @@ public class GymOwnerImpl implements GymOwnerInterface {
     }
 
     // Helper method to compare dates without time
-    private static boolean isSameDay(Date d1, Date d2) {
+    public static boolean isSameDay(Date d1, Date d2) {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
         return fmt.format(d1).equals(fmt.format(d2));
     }
