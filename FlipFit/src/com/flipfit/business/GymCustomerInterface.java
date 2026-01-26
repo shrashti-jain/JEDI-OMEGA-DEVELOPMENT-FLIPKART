@@ -20,5 +20,5 @@ public interface GymCustomerInterface {
     boolean cancelBooking(String bookingId);
 
     // Fixed: Now accepts userId
-    List<Booking> viewMyBookings(String userId);
+    List<Booking> viewBookings(String userId);
 }

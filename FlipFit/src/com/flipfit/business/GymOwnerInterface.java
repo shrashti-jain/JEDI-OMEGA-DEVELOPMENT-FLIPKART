@@ -1,7 +1,11 @@
 package com.flipfit.business;
 
+import com.flipfit.bean.Slot;
+
 public interface GymOwnerInterface {
-    void addCenter(String name, String location, String city);
-    void addSlot(String centerId, int capacity);
-    void updateSlotCapacity(String slotId, int newCapacity);
+    // Adds a request for a new center
+    void addCenter(String name, String ownerEmail, String city);
+
+    // Adds a specific slot to an existing center
+    void addSlot(String centerId, Slot slot);
 }

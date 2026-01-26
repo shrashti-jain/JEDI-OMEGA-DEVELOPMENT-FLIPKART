@@ -5,6 +5,7 @@ import com.flipfit.bean.GymCenter;
 import com.flipfit.bean.Slot;
 import com.flipfit.business.GymCustomerInterface;
 import com.flipfit.business.GymCustomerImpl;
+import com.flipfit.business.GymOwnerImpl;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,7 +29,7 @@ public class GymFlipFitCustomerMenu {
                 case 1 -> viewGymsByCity(scanner);
                 case 2 -> viewSlots(scanner);
                 case 3 -> createBooking(scanner, userId);
-                case 4 -> viewMyBookings(userId);
+                case 4 -> viewBookings(userId);
                 case 5 -> cancelBooking(scanner);
                 case 6 -> { System.out.println("Logging out..."); exit = true; }
                 default -> System.out.println("Invalid option.");
@@ -40,6 +41,7 @@ public class GymFlipFitCustomerMenu {
         System.out.print("Enter City Name: ");
         String city = scanner.next();
         List<GymCenter> centers = customerService.viewCenters(city);
+        System.out.println("<-----Available Gyms for city- " + city + "----->");
         centers.forEach(c -> System.out.println("ID: " + c.getCenterId() + " | Name: " + c.getCenterName()));
     }
 
@@ -52,7 +54,9 @@ public class GymFlipFitCustomerMenu {
         try {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr); // Use dateStr
             List<Slot> slots = customerService.viewSlotAvailability(centerId, date);
-            slots.forEach(s -> System.out.println("Slot ID: " + s.getSlotId() + " | Available: " + s.getAvailableSeats()));
+            System.out.println("<-----Available slots for date- " + date + "----->");
+            slots.forEach(s -> System.out.println("SLOT ID- " + s.getSlotId() + " Time: " + s.getStartTime() + " - " + s.getEndTime() +
+                    " | Remaining Seats: " + s.getAvailableSeats()));
         } catch (Exception e) {
             System.out.println("Invalid date format.");
         }
@@ -63,14 +67,41 @@ public class GymFlipFitCustomerMenu {
         String centerId = scanner.next();
         System.out.print("Enter Slot ID: ");
         String slotId = scanner.next();
+        System.out.print("Enter Date for booking (yyyy-MM-dd): ");
+        String dateStr = scanner.next();
 
-        Booking booking = customerService.bookSlot(userId, slotId, centerId, new Date());
-        if (booking != null) System.out.println("Booking Success! ID: " + booking.getBookingId());
+        try {
+            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+            Booking booking = customerService.bookSlot(userId, slotId, centerId, date);
+            if (booking != null) {
+                System.out.println("Booking Success! ID: " + booking.getBookingId());
+            }
+        } catch (Exception e) {
+            System.out.println("Invalid date format. Use yyyy-MM-dd");
+        }
     }
 
-    private static void viewMyBookings(String userId) {
-        List<Booking> bookings = customerService.viewMyBookings(userId);
-        bookings.forEach(b -> System.out.println("Booking ID: " + b.getBookingId() + " | Status: " + b.getStatus()));
+    private static void viewBookings(String email) {
+        List<Booking> myBookings = customerService.viewBookings(email);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+
+        if (myBookings.isEmpty()) {
+            System.out.println("No active bookings found for: " + email);
+        } else {
+            System.out.println("\n----------------------- MY BOOKINGS -----------------------");
+            System.out.printf("%-12s | %-15s | %-12s | %-15s | %-10s\n",
+                    "ID", "Gym Name", "Date", "Time", "Status");
+            System.out.println("-----------------------------------------------------------");
+
+            for (Booking b : myBookings) {
+                System.out.printf("%-12s | %-15s | %-12s | %-15s | %-10s\n",
+                        b.getBookingId(),
+                        b.getGymName(),
+                        dateFormat.format(b.getSlotDate()),
+                        b.getSlotTime(),
+                        b.getStatus());
+            }
+        }
     }
 
     private static void cancelBooking(Scanner scanner) {
