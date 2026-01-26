@@ -47,6 +47,14 @@ public class GymCustomerImpl implements GymCustomerInterface {
             return null;
         }
 
+        // Check for time slot conflicts with existing bookings
+        String timeRange = selectedSlot.getStartTime() + " - " + selectedSlot.getEndTime();
+        if (hasTimeConflict(userEmail, date, timeRange)) {
+            System.out.println("ERROR: You already have a booking at this time slot!");
+            System.out.println("Cannot book overlapping time slots across different gyms.");
+            return null;
+        }
+
         inventory.putIfAbsent(inventoryKey, selectedSlot.getCapacity());
 
         int currentAvailable = inventory.get(inventoryKey);
@@ -55,7 +63,6 @@ public class GymCustomerImpl implements GymCustomerInterface {
             inventory.put(inventoryKey, currentAvailable - 1);
 
             String bId = "B" + System.currentTimeMillis();
-            String timeRange = selectedSlot.getStartTime() + " - " + selectedSlot.getEndTime();
 
             // Save ALL details into the booking object
             Booking newBooking = new Booking(bId, userEmail, gymName, date, timeRange, "CONFIRMED");
@@ -66,6 +73,35 @@ public class GymCustomerImpl implements GymCustomerInterface {
             System.out.println("Slot is fully booked for this date!");
             return null;
         }
+    }
+
+    /**
+     * Helper method to check if the user already has a booking at the same time slot
+     * on the same date, regardless of gym location.
+     * 
+     * @param userEmail The email of the user
+     * @param date The date of the booking
+     * @param timeRange The time range (e.g., "09:00 - 10:00")
+     * @return true if there's a conflict, false otherwise
+     */
+    private boolean hasTimeConflict(String userEmail, Date date, String timeRange) {
+        return allBookings.stream()
+                .filter(b -> b.getUserEmail().equalsIgnoreCase(userEmail))
+                .filter(b -> b.getStatus().equalsIgnoreCase("CONFIRMED"))
+                .filter(b -> isSameDate(b.getSlotDate(), date))
+                .anyMatch(b -> b.getSlotTime().equals(timeRange));
+    }
+
+    /**
+     * Helper method to compare if two dates are the same day
+     * 
+     * @param date1 First date
+     * @param date2 Second date
+     * @return true if both dates are on the same day
+     */
+    private boolean isSameDate(Date date1, Date date2) {
+        if (date1 == null || date2 == null) return false;
+        return date1.toString().equals(date2.toString());
     }
 
     @Override
