@@ -1,11 +1,13 @@
 package com.flipfit.client;
 
 import com.flipfit.bean.GymCenter;
-import com.flipfit.business.GymOwnerImpl;
+import com.flipfit.business.AdminImplDAO;
 import java.util.List;
 import java.util.Scanner;
 
 public class GymFlipFitAdminMenu {
+
+    private static final AdminImplDAO adminService = new AdminImplDAO();
 
     public static void showAdminMenu(Scanner scanner) {
         boolean exit = false;
@@ -32,7 +34,7 @@ public class GymFlipFitAdminMenu {
                 case 2:
                     System.out.print("Enter Center ID to approve: ");
                     String approveId = scanner.next();
-                    if (GymOwnerImpl.approveCenter(approveId)) {
+                    if (adminService.approveCenter(approveId)) {
                         System.out.println("Center approved successfully!");
                     } else {
                         System.out.println("Center ID not found.");
@@ -42,7 +44,7 @@ public class GymFlipFitAdminMenu {
                 case 3:
                     System.out.print("Enter Center ID to remove: ");
                     String removeId = scanner.next();
-                    if (GymOwnerImpl.removeCenter(removeId)) {
+                    if (adminService.removeCenter(removeId)) {
                         System.out.println("Center " + removeId + " has been permanently removed.");
                     } else {
                         System.out.println("Error: Center ID not found.");
@@ -61,7 +63,7 @@ public class GymFlipFitAdminMenu {
     }
 
     private static void viewPendingRequests() {
-        List<GymCenter> pending = GymOwnerImpl.getPendingCenters();
+        List<GymCenter> pending = adminService.getPendingCenters();
         if (pending.isEmpty()) {
             System.out.println("No pending requests.");
         } else {

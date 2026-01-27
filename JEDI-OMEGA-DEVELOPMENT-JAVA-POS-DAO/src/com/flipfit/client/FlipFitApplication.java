@@ -1,14 +1,14 @@
 package com.flipfit.client;
 
 import com.flipfit.bean.User;
-import com.flipfit.business.UserImpl;
+import com.flipfit.business.UserImplDAO;
 import com.flipfit.business.UserInterface;
 
 import java.util.Scanner;
 
 public class FlipFitApplication {
 
-    private static UserInterface userService = new UserImpl();
+    private static UserInterface userService = new UserImplDAO();
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);

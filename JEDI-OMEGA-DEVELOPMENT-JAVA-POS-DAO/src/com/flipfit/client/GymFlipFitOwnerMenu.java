@@ -3,7 +3,7 @@ package com.flipfit.client;
 import com.flipfit.bean.GymCenter;
 import com.flipfit.bean.Slot;
 import com.flipfit.business.GymOwnerInterface;
-import com.flipfit.business.GymOwnerImpl;
+import com.flipfit.business.GymOwnerImplDAO;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
@@ -14,7 +14,7 @@ import java.util.Scanner;
 public class GymFlipFitOwnerMenu {
 
     // Instantiate the Business Service
-    private static final GymOwnerInterface ownerService = new GymOwnerImpl();
+    private static final GymOwnerImplDAO ownerService = new GymOwnerImplDAO();
 
     public static void showOwnerMenu(Scanner scanner, String ownerEmail) {
         boolean exit = false;
@@ -66,7 +66,7 @@ public class GymFlipFitOwnerMenu {
                 case 3:
                     System.out.println("\n--- Your Registered Centers ---");
                     // Call the logic using the ownerEmail passed from login
-                    List<GymCenter> myCenters = GymOwnerImpl.getCentersByOwner(ownerEmail);
+                    List<GymCenter> myCenters = ownerService.getCentersByOwner(ownerEmail);
 
                     if (myCenters.isEmpty()) {
                         System.out.println("You haven't registered any centers yet.");
@@ -76,8 +76,8 @@ public class GymFlipFitOwnerMenu {
                         System.out.println("----------------------------------------------------------------");
 
                         for (GymCenter c : myCenters) {
-                            // Check the boolean status and convert to text
-                            String status = c.isApproved() ? "APPROVED" : "PENDING";
+                            // Check the status field
+                            String status = c.getStatus();
 
                             System.out.printf("%-10s | %-20s | %-15s | %-10s\n",
                                     c.getCenterId(), c.getCenterName(), c.getCity(), status);
