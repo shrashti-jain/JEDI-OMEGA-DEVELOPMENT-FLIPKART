@@ -74,6 +74,10 @@ public class Slot {
         this.capacity = capacity;
     }
 
+    public int getTotalSeats() {
+        return capacity;
+    }
+
     public int getAvailableSeats() { return availableSeats; }
 
     public void setAvailableSeats(int availableSeats) {

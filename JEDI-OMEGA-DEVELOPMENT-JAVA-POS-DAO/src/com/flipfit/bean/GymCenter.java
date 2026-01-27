@@ -7,6 +7,7 @@ public class GymCenter {
     private String city;
     private String ownerEmail; // Crucial for linking gyms to owners
     private boolean isApproved;
+    private String status; // PENDING, APPROVED, REJECTED
 
     // Default constructor for DAO
     public GymCenter() {
@@ -19,6 +20,7 @@ public class GymCenter {
         this.city = city;
         this.ownerEmail = ownerEmail;
         this.isApproved = false; // Default is pending
+        this.status = "PENDING";
     }
 
     // Getters
@@ -28,6 +30,7 @@ public class GymCenter {
     public String getOwnerEmail() { return ownerEmail; }
     public boolean isApproved() { return isApproved; }
     public String getLocation() { return location; }
+    public String getStatus() { return status; }
 
     // Setters for DAO
     public void setCenterId(String centerId) { this.centerId = centerId; }
@@ -36,4 +39,8 @@ public class GymCenter {
     public void setCity(String city) { this.city = city; }
     public void setOwnerEmail(String ownerEmail) { this.ownerEmail = ownerEmail; }
     public void setApproved(boolean approved) { isApproved = approved; }
+    public void setStatus(String status) { 
+        this.status = status;
+        this.isApproved = "APPROVED".equals(status);
+    }
 }

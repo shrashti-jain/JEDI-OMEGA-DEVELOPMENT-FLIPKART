@@ -149,4 +149,48 @@ public class GymCenterDAO {
             return false;
         }
     }
+    
+    // Get gym centers by owner email
+    public List<GymCenter> getCentersByOwner(String ownerEmail) {
+        List<GymCenter> centers = new ArrayList<>();
+        String sql = "SELECT * FROM gym_centers WHERE owner_id = ?";
+        
+        try (Connection conn = GetConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, ownerEmail);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                GymCenter center = new GymCenter();
+                center.setCenterId(rs.getString("center_id"));
+                center.setCenterName(rs.getString("center_name"));
+                center.setLocation(rs.getString("address"));
+                center.setCity(rs.getString("city"));
+                center.setOwnerEmail(rs.getString("owner_id"));
+                center.setStatus(rs.getString("status"));
+                centers.add(center);
+            }
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return centers;
+    }
+    
+    // Delete gym center
+    public boolean deleteGymCenter(String centerId) {
+        String sql = "DELETE FROM gym_centers WHERE center_id = ?";
+        try (Connection conn = GetConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, centerId);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

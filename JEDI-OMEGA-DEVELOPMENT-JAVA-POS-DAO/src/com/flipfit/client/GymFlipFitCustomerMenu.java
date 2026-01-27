@@ -4,8 +4,7 @@ import com.flipfit.bean.Booking;
 import com.flipfit.bean.GymCenter;
 import com.flipfit.bean.Slot;
 import com.flipfit.business.GymCustomerInterface;
-import com.flipfit.business.GymCustomerImpl;
-import com.flipfit.business.GymOwnerImpl;
+import com.flipfit.business.GymCustomerImplDAO;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -15,7 +14,7 @@ import java.util.Scanner;
 public class GymFlipFitCustomerMenu {
 
     // Added 'final' to resolve warning
-    private static final GymCustomerInterface customerService = new GymCustomerImpl();
+    private static final GymCustomerInterface customerService = new GymCustomerImplDAO();
 
     public static void showCustomerMenu(Scanner scanner, String userId) {
         boolean exit = false;
@@ -72,37 +71,16 @@ public class GymFlipFitCustomerMenu {
 
         try {
             Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
-            // A. Get the Slot details first to know the time
-            Slot selectedSlot = GymOwnerImpl.getSlotById(slotId);
-            if (selectedSlot == null) {
-                System.out.println("Slot not found.");
-                return;
-            }
-            String slotTime = selectedSlot.getStartTime() + " - " + selectedSlot.getEndTime();
-
-            // B. Check for Conflict
-            Booking conflict = customerService.checkConflict(userId, date, slotTime);
-
-            if (conflict != null) {
-                System.out.println("\n[CONFLICT] You already have a booking at " + slotTime + " in " + conflict.getGymName());
-                System.out.print("Would you like to cancel the previous booking and proceed? (yes/no): ");
-                String confirm = scanner.next().toLowerCase();
-                scanner.nextLine();
-
-                if (confirm.equals("yes")) {
-                    customerService.cancelBooking(conflict.getBookingId());
-                    System.out.println("Previous booking cancelled.");
-                } else {
-                    System.out.println("New booking aborted.");
-                    return;
-                }
-            }
-
-            // C. Finally, call the actual booking method
+            
+            // Call booking service directly - it will handle validation
             Booking booking = customerService.bookSlot(userId, slotId, centerId, date);
+            
             if (booking != null) {
                 System.out.println("Booking Success! ID: " + booking.getBookingId());
+            } else {
+                System.out.println("Booking failed! Please check if slot exists and is available.");
             }
+            
         } catch (Exception e) {
             System.out.println("Invalid date format. Use yyyy-MM-dd");
         }
