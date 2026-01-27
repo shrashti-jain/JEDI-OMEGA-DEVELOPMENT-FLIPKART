@@ -10,8 +10,8 @@ public class Booking {
     private String slotTime; // e.g., "09:00 - 10:00"
     private String status;
 
-    public void setStatus(String status) {
-        this.status = status;
+    // Default constructor for DAO
+    public Booking() {
     }
 
     public Booking(String bookingId, String userEmail, String slotId, String gymName, Date slotDate, String slotTime, String status) {
@@ -30,16 +30,15 @@ public class Booking {
     public String getSlotTime() { return slotTime; }
     public String getBookingId() { return bookingId; }
     public String getStatus() { return status; }
-
-    public String getSlotId() {
-        return slotId;
-    }
-
-    public void setSlotId(String slotId) {
-        this.slotId = slotId;
-    }
-
+    public String getSlotId() { return slotId; }
     public String getUserEmail() { return userEmail; }
 
-
+    // Setters for DAO
+    public void setBookingId(String bookingId) { this.bookingId = bookingId; }
+    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+    public void setGymName(String gymName) { this.gymName = gymName; }
+    public void setSlotId(String slotId) { this.slotId = slotId; }
+    public void setSlotDate(Date slotDate) { this.slotDate = slotDate; }
+    public void setSlotTime(String slotTime) { this.slotTime = slotTime; }
+    public void setStatus(String status) { this.status = status; }
 }

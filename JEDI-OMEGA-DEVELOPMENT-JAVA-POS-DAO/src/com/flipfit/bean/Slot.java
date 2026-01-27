@@ -12,6 +12,10 @@ public class Slot {
     private int capacity;
     private int availableSeats;
 
+    // Default constructor for DAO
+    public Slot() {
+    }
+
     public Slot(String slotId, String centerId, LocalTime startTime, LocalTime endTime, Date date, int totalSeats) {
         this.slotId = slotId;
         this.centerId = centerId;
