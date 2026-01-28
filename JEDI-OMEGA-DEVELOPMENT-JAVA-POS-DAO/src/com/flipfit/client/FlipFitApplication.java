@@ -3,6 +3,7 @@ package com.flipfit.client;
 import com.flipfit.bean.User;
 import com.flipfit.business.UserImpl;
 import com.flipfit.business.UserInterface;
+import com.flipfit.utils.ValidationUtils;
 
 import java.util.Scanner;
 
@@ -18,87 +19,84 @@ public class FlipFitApplication {
             System.out.println("\n========================================");
             System.out.println("      Welcome to FlipFit Application    ");
             System.out.println("========================================");
-            System.out.println("Type one of the following options:");
-            System.out.println(" > LOGIN    (To access your dashboard)");
-            System.out.println(" > OWNER    (Registration for Gym Owners)");
-            System.out.println(" > CUSTOMER (Registration for Customers)");
-            System.out.println(" > CHANGE PASSWORD ");
-            System.out.println(" > EXIT");
-            System.out.print("\nEnter your choice: ");
+            System.out.println("1. Login");
+            System.out.println("2. Registration for Gym Owner");
+            System.out.println("3. Registration for Customer");
+            System.out.println("4. Change Password");
+            System.out.println("5. Exit");
+            System.out.print("\nEnter your choice (1-5): ");
 
-            String choice = scanner.nextLine().toLowerCase();
-            //scanner.nextLine();
-            System.out.println(choice);
-
-            // Using if-else
-            if (choice.equals("login")) {
-                //exit = true;
-                login(scanner);
-            }
-            else if (choice.equals("owner")) {
-                //exit = true;
-                registerOwner(scanner);
-            }
-            else if (choice.equals("customer")) {
-                //exit = true;
-                registerCustomer(scanner);
-            }
-            else if (choice.equals("change password") || choice.equals("change pass")) {
-                //exit = true;
-                changePassword(scanner);
-            }
-            else if (choice.equals("exit")) {
-                exit = true;
-                System.out.println("Exiting FlipFit.. Goodbye!");
-            }
-            else {
-                System.out.println("Invalid choice. Please type 'Login', 'Owner', 'Customer', Change Password', or 'Exit'.");
+            // Input validation for Integer
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next(); // Clear invalid input
+                continue;
             }
 
-        } while (!exit); // Loop continues until exit is true
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Clear the buffer
+
+            switch (choice) {
+                case 1:
+                    login(scanner);
+                    break;
+                case 2:
+                    registerOwner(scanner);
+                    break;
+                case 3:
+                    registerCustomer(scanner);
+                    break;
+                case 4:
+                    changePassword(scanner);
+                    break;
+                case 5:
+                    exit = true;
+                    System.out.println("Exiting FlipFit.. Goodbye!");
+                    break;
+                default:
+                    System.out.println("Invalid choice. Please select between 1 and 5.");
+            }
+
+        } while (!exit);
 
         scanner.close();
     }
 
     private static void login(Scanner scanner) {
-        System.out.print("Enter email: ");
+        System.out.print("Enter Email: ");
         String email = scanner.next();
         System.out.print("Enter Password: ");
         String pass = scanner.next();
-
         scanner.nextLine();
 
         User user = userService.authenticate(email, pass);
-        if(user != null){
-            System.out.print("Enter Role: ");
-            String role = scanner.next(); // takes role as input
 
+        if (user != null) {
+            // Check for Owner Approval Status
+            if (user.getRole().equalsIgnoreCase("owner") && !user.isApproved()) {
+                System.out.println("\n[NOTIFICATION]: Your profile is pending Admin approval. You cannot login yet.");
+                return;
+            }
 
+            String role = user.getRole().toLowerCase();
+            System.out.println("<----------------------------->");
+            System.out.println("Login Successful as " + role + "!");
 
             switch (role) {
                 case "customer":
-                    System.out.println("<----------------------------->");
-                    System.out.println("Login Successful as Customer!");
-                    GymFlipFitCustomerMenu.showCustomerMenu(scanner, email); //
+                    GymFlipFitCustomerMenu.showCustomerMenu(scanner, email);
                     break;
-
                 case "owner":
-                    System.out.println("<----------------------------->");
-                    System.out.println("Login Successful as Gym Owner!");
-                    GymFlipFitOwnerMenu.showOwnerMenu(scanner, email); //
+                    GymFlipFitOwnerMenu.showOwnerMenu(scanner, email);
                     break;
-
                 case "admin":
-                    System.out.println("<----------------------------->");
-                    System.out.println("Login Successful as Admin!");
-                    GymFlipFitAdminMenu.showAdminMenu(scanner); //
+                    GymFlipFitAdminMenu.showAdminMenu(scanner);
                     break;
-
                 default:
-                    System.out.println("<----------------------------->");
-                    System.out.println("Invalid Role. Access Denied.");
-                    break;
+                    System.out.println("Error: Unknown Role Assigned.");
             }
+        } else {
+            System.out.println("Invalid Email or Password.");
         }
     }
 
@@ -107,47 +105,71 @@ public class FlipFitApplication {
         System.out.print("Full Name: "); String name = scanner.nextLine();
         System.out.print("Email: "); String email = scanner.next();
         System.out.print("Password: "); String pass = scanner.next();
+        System.out.print("Contact No: "); String contact = scanner.next();
         scanner.nextLine();
         System.out.print("Address: "); String addr = scanner.nextLine();
         System.out.print("City: "); String city = scanner.next();
 
-        // Logic to save these details to GymCustomer bean goes here
-        userService.registerCustomer(name, email, pass, addr, city);
-        scanner.nextLine();
-        //System.out.println("Customer registered successfully!");
+        userService.registerCustomer(name, email, pass, contact, addr, city);
+        System.out.println("Customer registered successfully!");
     }
 
     private static void registerOwner(Scanner scanner) {
         System.out.println("\n--- Gym Owner Registration ---");
-        System.out.print("Full Name: "); String name = scanner.nextLine();
-        //scanner.nextLine();
-        System.out.print("Email: "); String email = scanner.next();
-        System.out.print("Password: "); String pass = scanner.next();
 
-        // No longer asking for Gym Name/Address here!
-        userService.registerOwner(name, email, pass, "", "", "");
-        System.out.println("\nOwner account created successfully! Please Login to add your Gym.");
-        scanner.nextLine();
+        // 1. Validate Name Right Away
+        String name;
+        while (true) {
+            System.out.print("Full Name: ");
+            name = scanner.nextLine();
+            if (ValidationUtils.isFullName(name)) break;
+            System.out.println(">> Error: Please enter your First and Last name.");
+        }
+
+        // 2. Validate Email Right Away
+        String email;
+        while (true) {
+            System.out.print("Email: ");
+            email = scanner.next();
+            if (ValidationUtils.isValidEmail(email)) break;
+            System.out.println(">> Error: Invalid email format (e.g., name@mail.com).");
+        }
+
+        // 3. Validate Contact Right Away
+        String contact;
+        while (true) {
+            System.out.print("Contact No (10 digits): ");
+            contact = scanner.next();
+            if (ValidationUtils.isValidContact(contact)) break;
+            System.out.println(">> Error: Contact must be exactly 10 numeric digits.");
+        }
+
+        // Only after all individual loops are cleared, do we call the service
+        System.out.print("Password: ");
+        String pass = scanner.next();
+        System.out.print("Identity No (Aadhar/PAN): ");
+        String idNo = scanner.next();
+
+        // Sending request with isApproved = false
+        userService.registerOwner(name, email, pass, contact, idNo, "OWNER");
+        System.out.println("\nRegistration request sent! Please wait for Admin to approve your profile before logging in.");
     }
 
     private static void changePassword(Scanner scanner) {
         System.out.println("\n--- Change Password ---");
         System.out.print("Enter Email: ");
         String email = scanner.next();
-
         System.out.print("Enter New Password: ");
         String newPass = scanner.next();
-
         System.out.print("Confirm New Password: ");
         String confirmPass = scanner.next();
         scanner.nextLine();
 
         if (newPass.equals(confirmPass)) {
-            userService.updatePassword(email,confirmPass);
-            // Logic to update the user's bean would go here
-            System.out.println("Password changed successfully for " + email);
+            userService.updatePassword(email, confirmPass);
+            System.out.println("Password changed successfully.");
         } else {
-            System.out.println("Error: Passwords do not match. Please try again.");
+            System.out.println("Error: Passwords do not match.");
         }
     }
 }

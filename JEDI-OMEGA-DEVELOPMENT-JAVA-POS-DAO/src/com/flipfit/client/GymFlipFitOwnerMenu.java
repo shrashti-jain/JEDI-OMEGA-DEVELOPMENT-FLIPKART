@@ -13,74 +13,96 @@ import java.util.Scanner;
 
 public class GymFlipFitOwnerMenu {
 
-    // Instantiate the Business Service
     private static final GymOwnerInterface ownerService = new GymOwnerImpl();
 
     public static void showOwnerMenu(Scanner scanner, String ownerEmail) {
         boolean exit = false;
         while (!exit) {
             System.out.println("\n<----- Gym Owner Dashboard (" + ownerEmail + ") ----->");
-            System.out.println("1. Add New Gym Center");
-            System.out.println("2. Add Slot to Center");
+            System.out.println("1. Add New Gym Center (Requires Admin Approval)");
+            System.out.println("2. Add Slot to Approved Center");
             System.out.println("3. View My Centers (Status Check)");
             System.out.println("4. Logout");
             System.out.print("Enter choice: ");
+
+            // Input validation
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+                continue;
+            }
 
             int choice = scanner.nextInt();
             scanner.nextLine(); // Clear buffer
 
             switch (choice) {
                 case 1:
-                    System.out.print("Enter Gym Center Name: ");
+                    System.out.println("\n--- Submit Gym Center Details ---");
+                    System.out.print("Enter Gym Name: ");
                     String name = scanner.nextLine();
+                    System.out.print("Enter Full Location/Address: ");
+                    String location = scanner.nextLine();
                     System.out.print("Enter City: ");
                     String city = scanner.nextLine();
+                    System.out.print("Enter Pincode: ");
+                    String pincode = scanner.nextLine();
+                    System.out.print("Enter GST Number: ");
+                    String gst = scanner.nextLine();
 
-                    // Call the Business Service
-                    ownerService.addCenter(name, ownerEmail, city);
+                    // Updated call to service with new verification fields
+                    ownerService.addCenter(name, ownerEmail, location, city, pincode, gst);
+                    System.out.println("Waiting for Admin verification.");
                     break;
 
                 case 2:
-                    System.out.print("Enter Center ID (e.g., C1): ");
+                    // Logic check: Only allow slot addition for approved centers
+                    System.out.print("Enter Center ID to add slots: ");
                     String centerId = scanner.next();
+
+                    // We verify if this center belongs to the owner AND is approved
+                    if (!ownerService.isCenterApproved(centerId)) {
+                        System.out.println("ALERT: You can only add slots to centers verified and APPROVED by Admin.");
+                        break;
+                    }
+
                     System.out.print("Enter Slot ID (e.g., S1): ");
                     String slotId = scanner.next();
-                    System.out.print("Enter Date (yyyy-MM-dd) : ");
+                    System.out.print("Enter Date (yyyy-MM-dd): ");
                     String dateStr = scanner.next();
                     System.out.print("Enter Start Time (HH:mm): ");
-                    LocalTime start = LocalTime.parse(scanner.next());
+                    String startStr = scanner.next();
                     System.out.print("Enter End Time (HH:mm): ");
-                    LocalTime end = LocalTime.parse(scanner.next());
-                    System.out.print("Total Seats: ");
+                    String endStr = scanner.next();
+                    System.out.print("Total Capacity (Seats): ");
                     int seats = scanner.nextInt();
 
                     try {
+                        LocalTime start = LocalTime.parse(startStr);
+                        LocalTime end = LocalTime.parse(endStr);
                         Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+
                         Slot newSlot = new Slot(slotId, centerId, start, end, date, seats);
                         ownerService.addSlot(centerId, newSlot);
                     } catch (Exception e) {
-                        System.out.println("Invalid date format.");
+                        System.out.println("Error: Invalid format provided for time or date.");
                     }
                     break;
 
                 case 3:
-                    System.out.println("\n--- Your Registered Centers ---");
-                    // Call the logic using the ownerEmail passed from login
-                    List<GymCenter> myCenters = GymOwnerImpl.getCentersByOwner(ownerEmail);
+                    System.out.println("\n--- Your Registered Centers & Verification Status ---");
+                    List<GymCenter> myCenters = ownerService.getCentersByOwner(ownerEmail);
 
                     if (myCenters.isEmpty()) {
-                        System.out.println("You haven't registered any centers yet.");
+                        System.out.println("No gym centers registered under your account.");
                     } else {
-                        System.out.println("----------------------------------------------------------------");
-                        System.out.printf("%-10s | %-20s | %-15s | %-10s\n", "ID", "Name", "City", "Status");
-                        System.out.println("----------------------------------------------------------------");
+                        System.out.println("----------------------------------------------------------------------------------");
+                        System.out.printf("%-10s | %-15s | %-15s | %-15s | %-10s\n", "ID", "Name", "City", "GST No", "Status");
+                        System.out.println("----------------------------------------------------------------------------------");
 
                         for (GymCenter c : myCenters) {
-                            // Check the boolean status and convert to text
                             String status = c.isApproved() ? "APPROVED" : "PENDING";
-
-                            System.out.printf("%-10s | %-20s | %-15s | %-10s\n",
-                                    c.getCenterId(), c.getCenterName(), c.getCity(), status);
+                            System.out.printf("%-10s | %-15s | %-15s | %-15s | %-10s\n",
+                                    c.getCenterId(), c.getCenterName(), c.getCity(), c.getGstNo(), status);
                         }
                     }
                     break;
@@ -91,7 +113,7 @@ public class GymFlipFitOwnerMenu {
                     break;
 
                 default:
-                    System.out.println("Invalid option. Please enter a number between 1-4.");
+                    System.out.println("Invalid choice. Select 1-4.");
             }
         }
     }

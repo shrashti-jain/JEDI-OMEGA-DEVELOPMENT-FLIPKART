@@ -1,74 +1,79 @@
 package com.flipfit.business;
 
-import com.flipfit.bean.Admin;
-import com.flipfit.bean.GymCustomer;
-import com.flipfit.bean.GymOwner;
 import com.flipfit.bean.User;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.flipfit.dao.UserDAO; // Importing your new DAO
 
 public class UserImpl implements UserInterface {
-    // Static list acts as a temporary database
-    private static final List<User> users = new ArrayList<>();
 
-    static {
-        // Adding a default Admin for testing
-        users.add(new Admin("A1", "Super Admin", "admin@flipfit.com", "1234567890", "pass123"));
+    // Instead of a static list, we use the DAO for database operations
+    private UserDAO userDAO = new UserDAO();
+
+    @Override
+    public void registerCustomer(String name, String email, String password, String contact, String address, String city) {
+        // Generate a unique ID
+        String id = "C" + System.currentTimeMillis();
+
+        // Customers are approved by default in our flow
+        // Parameters: id, name, email, contact, password, role, identityNo, isApproved
+        // Parameters: id, name, email, contact, password, role, identityNo, isApproved
+        User newCustomer = new User(id, name, email, contact, password, "CUSTOMER", null, true); // 8 args
+
+        if (userDAO.registerUser(newCustomer)) {
+            System.out.println("Customer registered successfully in the database!");
+        } else {
+            System.out.println("Error: Customer registration failed.");
+        }
     }
 
     @Override
-    public void registerCustomer(String name, String email, String password, String address, String city) {
-        String id = "C" + (users.size() + 1);
-        users.add(new GymCustomer(id, name, email, "0000000000", password));
-        System.out.println("Customer registered successfully in system!");
-    }
+    public void registerOwner(String name, String email, String password, String contact, String identityNo, String role) {
+        // Generate a unique ID
+        String id = "O" + System.currentTimeMillis();
 
-    @Override
-    public void registerOwner(String name, String email, String password, String gymName, String address, String city) {
-        String id = "O" + (users.size() + 1);
-        users.add(new GymOwner(id, name, email, "0000000000", password));
-        System.out.println("Gym Owner registered successfully! Pending approval.");
+        // Stage 1: Owners are registered as NOT approved (isApproved = false)
+        // Parameters: id, name, email, contact, password, role, identityNo, isApproved
+        User ownerRequest = new User(id, name, email, contact, password, "OWNER", identityNo, false); // 8 args
+
+        if (userDAO.registerUser(ownerRequest)) {
+            System.out.println("Gym Owner registration request sent! Pending Admin approval.");
+        } else {
+            System.out.println("Error: Owner registration failed.");
+        }
     }
 
     @Override
     public User authenticate(String email, String password) {
-        for (User u : users) {
-            // use equalsIgnoreCase for email, but equals for password
-            if (u.getEmail().equalsIgnoreCase(email)) {
-                if (u.getPassword().equals(password)) {
-                    return u;
-                } else {
-                    System.out.println("Invalid Password!");
-                    return null;
-                }
-            }
+        // Calls DAO to check credentials against the MySQL database
+        User user = userDAO.authenticateUser(email, password);
+
+        if (user == null) {
+            System.out.println("Invalid Email or Password.");
+            return null;
         }
-        System.out.println("User not found.");
-        return null;
+
+        // Stage 2: Guard check for Owners. If not approved, deny login
+        if (user.getRole().equalsIgnoreCase("OWNER") && !user.isApproved()) {
+            System.out.println("Notification: Your profile is still pending Admin approval.");
+            return null;
+        }
+
+        return user;
     }
 
     @Override
     public boolean updatePassword(String email, String newPassword) {
-        for (User u : users) {
-            if (u.getEmail().equalsIgnoreCase(email)) {
-                // ACTUALLY UPDATE THE DATA
-                u.setPassword(newPassword);
-                System.out.println("Success: Password updated in system for: " + email);
-                return true;
-            }
-        }
-        System.out.println("Error: User with email " + email + " not found.");
-        return false;
+        // Logic to update password in the database via DAO
+        return userDAO.updatePassword(email, newPassword);
     }
+
     @Override
     public boolean login(String email, String password) {
-        System.out.println("Checking credentials for: " + email);
-        return true; // Simplified for now
+        // This is handled via authenticate in the current flow
+        return authenticate(email, password) != null;
     }
 
     @Override
     public void logout() {
-        System.out.println("User logged out.");
+        System.out.println("User session ended.");
     }
 }

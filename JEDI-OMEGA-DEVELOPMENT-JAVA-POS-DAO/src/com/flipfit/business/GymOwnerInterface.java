@@ -1,11 +1,18 @@
 package com.flipfit.business;
 
+import com.flipfit.bean.GymCenter;
 import com.flipfit.bean.Slot;
 
-public interface GymOwnerInterface {
-    // Adds a request for a new center
-    void addCenter(String name, String ownerEmail, String city);
+import java.util.List;
 
-    // Adds a specific slot to an existing center
-    void addSlot(String centerId, Slot slot);
+public interface GymOwnerInterface {
+    void addCenter(String name, String ownerEmail, String location, String city, String pincode, String gst);
+
+    boolean isCenterApproved(String centerId);
+
+    void addSlot(String centerId, Slot newSlot);
+
+    List<GymCenter> getCentersByOwner(String ownerEmail);
+    // Adds a request for a new center
+
 }

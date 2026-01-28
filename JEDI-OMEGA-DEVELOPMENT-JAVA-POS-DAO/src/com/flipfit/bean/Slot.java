@@ -9,19 +9,29 @@ public class Slot {
     private LocalTime startTime;
     private LocalTime endTime;
     private Date date;
-    private int capacity;
-    private int availableSeats;
+    private int capacity;       // Total capacity of the slot
+    private int availableSeats; // Seats remaining for booking
 
     public Slot(String slotId, String centerId, LocalTime startTime, LocalTime endTime, Date date, int totalSeats) {
         this.slotId = slotId;
         this.centerId = centerId;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.capacity = totalSeats;
         this.date = date;
+        this.capacity = totalSeats;
         this.availableSeats = totalSeats; // Initially, all seats are available
     }
 
+    // This is the function the DAO and Business layer look for
+    public int getSeats() {
+        return this.capacity;
+    }
+
+    public void setSeats(int capacity) {
+        this.capacity = capacity;
+    }
+
+    // Getters and Setters
     public Date getDate() {
         return date;
     }
@@ -70,7 +80,9 @@ public class Slot {
         this.capacity = capacity;
     }
 
-    public int getAvailableSeats() { return availableSeats; }
+    public int getAvailableSeats() {
+        return availableSeats;
+    }
 
     public void setAvailableSeats(int availableSeats) {
         this.availableSeats = availableSeats;
