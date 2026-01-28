@@ -9,10 +9,27 @@ import com.flipfit.business.AdminImpl;
 import java.util.List;
 import java.util.Scanner;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class GymFlipFitAdminMenu.
+* Handles the user interface and interactions for the Admin user.
+* Provides a console-based dashboard to manage approvals for gym owners and centers,
+* as well as viewing system reports.
+*
+* @author Mansa
+* @ClassName GymFlipFitAdminMenu
+*/
 public class GymFlipFitAdminMenu {
 
     private static final AdminInterface adminService = new AdminImpl();
 
+    /**
+     * Show admin menu.
+     * Displays the main dashboard options for the Admin and handles navigation.
+     * Loops until the admin chooses to logout.
+     *
+     * @param scanner the shared Scanner instance for reading user input
+     */
     public static void showAdminMenu(Scanner scanner) {
         boolean exit = false;
         while (!exit) {
@@ -110,6 +127,11 @@ public class GymFlipFitAdminMenu {
         }
     }
 
+    /**
+     * View pending owners.
+     * Retrieves and displays the list of Gym Owners waiting for identity verification.
+     * Helps the admin identify which accounts need approval.
+     */
     private static void viewPendingOwners() {
         // Stage 1 Verification: Check Identity Numbers
         List<User> pendingOwners = adminService.getPendingOwners();
@@ -124,6 +146,11 @@ public class GymFlipFitAdminMenu {
         }
     }
 
+    /**
+     * View pending gym requests.
+     * Retrieves and displays the list of Gym Centers waiting for GST and location verification.
+     * Helps the admin identify which centers need approval.
+     */
     private static void viewPendingGymRequests() {
         // Stage 4 Verification: Check GST and Pincode
         List<GymCenter> pending = adminService.getPendingCenters();

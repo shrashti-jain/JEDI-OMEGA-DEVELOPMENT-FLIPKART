@@ -7,10 +7,27 @@ import com.flipfit.utils.ValidationUtils;
 
 import java.util.Scanner;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class FlipFitApplication.
+* The main entry point for the FlipFit application.
+* Manages the initial landing menu, user authentication, and routing to specific dashboards
+* based on the user's role (Customer, Gym Owner, or Admin).
+*
+* @author Mansa
+* @ClassName FlipFitApplication
+*/
 public class FlipFitApplication {
 
     private static UserInterface userService = new UserImpl();
 
+    /**
+     * The main method.
+     * Executes the primary application loop, offering options to login, register, or exit.
+     * Handles global exception handling and scanner resource management.
+     *
+     * @param args the command line arguments
+     */
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
@@ -62,6 +79,15 @@ public class FlipFitApplication {
         scanner.close();
     }
 
+    /**
+     * Login.
+     * Handles the user authentication process.
+     * Collects credentials, verifies them via the service layer, and routes the user
+     * to the appropriate menu based on their role.
+     * Includes a check for Gym Owner approval status.
+     *
+     * @param scanner the shared Scanner instance for user input
+     */
     private static void login(Scanner scanner) {
         System.out.print("Enter Email: ");
         String email = scanner.next();
@@ -100,6 +126,13 @@ public class FlipFitApplication {
         }
     }
 
+    /**
+     * Register customer.
+     * Handles the UI interaction for registering a new customer.
+     * Collects all necessary fields and calls the service layer to create the account.
+     *
+     * @param scanner the shared Scanner instance
+     */
     private static void registerCustomer(Scanner scanner) {
         System.out.println("\n--- Customer Registration ---");
         System.out.print("Full Name: "); String name = scanner.nextLine();
@@ -114,6 +147,14 @@ public class FlipFitApplication {
         System.out.println("Customer registered successfully!");
     }
 
+    /**
+     * Register owner.
+     * Handles the UI interaction for registering a new gym owner.
+     * Includes strict validation loops for Name, Email, and Contact to ensure data integrity
+     * before sending the request to the service layer.
+     *
+     * @param scanner the shared Scanner instance
+     */
     private static void registerOwner(Scanner scanner) {
         System.out.println("\n--- Gym Owner Registration ---");
 
@@ -155,6 +196,13 @@ public class FlipFitApplication {
         System.out.println("\nRegistration request sent! Please wait for Admin to approve your profile before logging in.");
     }
 
+    /**
+     * Change password.
+     * Handles the UI flow for a user to update their password.
+     * Verifies that the new password matches the confirmation password before updating.
+     *
+     * @param scanner the shared Scanner instance
+     */
     private static void changePassword(Scanner scanner) {
         System.out.println("\n--- Change Password ---");
         System.out.print("Enter Email: ");

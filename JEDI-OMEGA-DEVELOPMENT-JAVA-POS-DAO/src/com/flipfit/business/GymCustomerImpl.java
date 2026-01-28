@@ -10,10 +10,16 @@ import com.flipfit.dao.SlotDAO;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+//TODO: Auto-generated Javadoc
 /**
- * Implementation of customer-specific functionalities.
- * Manages gym browsing, slot availability checks, and booking lifecycles via DAOs.
- */
+* The Class GymCustomerImpl.
+* Implementation of customer-specific functionalities.
+* Manages gym browsing, slot availability checks, and booking lifecycles via DAOs.
+* This class serves as the business logic layer for customer actions.
+*
+* @author Krishna Nirvas
+* @ClassName GymCustomerImpl
+*/
 public class GymCustomerImpl implements GymCustomerInterface {
 
     private final SlotDAO slotDAO = new SlotDAO();

@@ -8,17 +8,25 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO: Auto-generated Javadoc
 /**
  * Data Access Object (DAO) for User-related database operations.
  * Manages CRUD operations for Customers, Owners, and Admins in MySQL.
+ * 
+ * @author Shrashti
+ * @ClassName UserDAO
  */
 
 public class UserDAO {
 
 
-    /**
+	/**
      * Unified registration for both Customers and Owners.
      * Parameters are mapped directly from the User bean.
+     * Handles specific constraints like contact length and email format via SQL exceptions.
+     *
+     * @param user the User bean object containing registration details
+     * @return true if the user was successfully registered in the database
      */
     public boolean registerUser(User user) {
         //String sql = "INSERT INTO User (userId, name, email, contact, password, role, identityNo, isApproved) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -48,8 +56,13 @@ public class UserDAO {
     }
 
     /**
-     * Authenticates user and returns bean if credentials match.
-     * Approval logic is handled in UserImpl.
+     * Authenticates a user and returns their profile bean if credentials match.
+     * Checks email and password against the database records.
+     * Approval logic (checking isApproved) is typically handled in the Service layer (UserImpl).
+     *
+     * @param email the user's email address
+     * @param password the user's password
+     * @return the User object if authentication is successful, otherwise null
      */
     public User authenticateUser(String email, String password) {
         //String sql = "SELECT * FROM User WHERE email = ? AND password = ?";
@@ -79,7 +92,12 @@ public class UserDAO {
     }
 
     /**
+     * Updates the password for a specific user.
      * Required by UserImpl for the "Change Password" feature.
+     *
+     * @param email the email of the user requesting the password change
+     * @param newPassword the new password to set
+     * @return true if the password was successfully updated
      */
     public boolean updatePassword(String email, String newPassword) {
         //String sql = "UPDATE User SET password = ? WHERE email = ?";
@@ -97,7 +115,10 @@ public class UserDAO {
     }
 
     /**
+     * Retrieves a list of Gym Owners who are pending approval.
      * Used by AdminImpl to view Stage 1 registration requests.
+     *
+     * @return a List of User objects representing pending gym owners
      */
     public List<User> getPendingOwners() {
         List<User> pendingOwners = new ArrayList<>();
@@ -131,7 +152,11 @@ public class UserDAO {
     }
 
     /**
-     * Stage 2: Admin approves the Owner profile.
+     * Approves a Gym Owner's profile.
+     * Corresponds to Stage 2 of the workflow where Admin validates the owner.
+     *
+     * @param email the email of the gym owner to approve
+     * @return true if the owner was successfully approved
      */
     public boolean approveOwner(String email) {
         //String sql = "UPDATE User SET isApproved = true WHERE email = ? AND role = 'OWNER'";
@@ -146,6 +171,13 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Deletes a user account permanently by their email.
+     * Useful for account cleanup or removing rejected applications.
+     *
+     * @param email the email of the user to delete
+     * @return true if the user was successfully deleted
+     */
     public boolean deleteUserByEmail(String email) {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(SQLConstants.USER_DELETE_BY_EMAIL)) {
@@ -157,6 +189,12 @@ public class UserDAO {
         }
     }
 
+    /**
+     * Retrieves all Gym Owners currently in the system regardless of approval status.
+     * Used for administrative reporting or management.
+     *
+     * @return a List of all User objects with role 'OWNER'
+     */
     public List<User> getAllOwners() {
         List<User> owners = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();

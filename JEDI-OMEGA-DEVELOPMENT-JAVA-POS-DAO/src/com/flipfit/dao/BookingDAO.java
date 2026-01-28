@@ -10,6 +10,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class BookingDAO.
+*
+* @author Shrashti
+* @ClassName BookingDAO
+*/
+
 /**
  * Data Access Object for Booking related operations.
  * Handles persistence and retrieval of customer reservations.
@@ -124,6 +132,12 @@ public class BookingDAO {
         return null;
     }
 
+    /**
+     * Gets the booking by id.
+     *
+     * @param bookingId the booking id
+     * @return the booking by id
+     */
     public Booking getBookingById(String bookingId) {
         String sql = "SELECT b.*, s.startTime, s.endTime, s.slotDate, g.centerName " +
                 "FROM Booking b " +
@@ -141,6 +155,10 @@ public class BookingDAO {
 
     /**
      * Helper method to map a ResultSet row to a Booking bean.
+     * *
+     * @param rs the rs
+     * @return the booking
+     * @throws SQLException the SQL exception
      */
     private Booking mapResultSetToBooking(ResultSet rs) throws SQLException {
         return new Booking(

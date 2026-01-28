@@ -9,11 +9,23 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class SlotDAO.
+* Data Access Object for handling Slot-related database operations.
+* Manages the lifecycle of gym time slots including creation, retrieval, and capacity updates.
+*
+* @author Shrashti
+* @ClassName SlotDAO
+*/
 public class SlotDAO {
 
-    /**
+	/**
      * Adds a new slot to an approved gym center.
-     * Verified by the business layer before calling this method.
+     * Verified by the business layer before calling this method to ensure the center is approved.
+     *
+     * @param slot the slot object containing timing, date, and capacity details
+     * @return true if the slot was successfully inserted into the database
      */
     public boolean addSlot(Slot slot) {
         //String sql = "INSERT INTO Slot (slotId, centerId, startTime, endTime, slotDate, capacity) VALUES (?, ?, ?, ?, ?, ?)";
@@ -34,7 +46,11 @@ public class SlotDAO {
 
     /**
      * Fetches all slots for a specific center on a specific date.
-     * Used by customers to browse available timings.
+     * Used by customers to browse available timings for workout sessions.
+     *
+     * @param centerId the unique ID of the gym center
+     * @param date the date for which slots are requested
+     * @return a List of Slot objects available on the given date and center
      */
     public List<Slot> getSlotsByCenterAndDate(String centerId, Date date) {
         List<Slot> slots = new ArrayList<>();
@@ -62,7 +78,12 @@ public class SlotDAO {
     }
 
     /**
-     * Updates the capacity of a slot after a booking is made.
+     * Updates the capacity of a slot after a booking or cancellation is made.
+     * Decrements seat count for bookings and increments for cancellations.
+     *
+     * @param slotId the unique ID of the slot
+     * @param newCapacity the updated number of available seats
+     * @return true if the capacity was successfully updated
      */
     public boolean updateSlotCapacity(String slotId, int newCapacity) {
         //String sql = "UPDATE Slot SET capacity = ? WHERE slotId = ?";
@@ -76,6 +97,13 @@ public class SlotDAO {
         }
     }
 
+    /**
+     * Retrieves a specific slot by its unique ID.
+     * Used internally to validate slot existence before creating a booking.
+     *
+     * @param slotId the unique ID of the slot
+     * @return the Slot object if found, otherwise null
+     */
     public Slot getSlotById(String slotId) {
         //String sql = "SELECT * FROM Slot WHERE slotId = ?";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.SLOT_GET_BY_ID)) {

@@ -8,8 +8,25 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class GymCenterDAO.
+* Data Access Object for handling all database operations related to Gym Centers.
+* Includes functionality for adding centers, approval workflows, and fetching lists for different actors.
+*
+* @author Shrashti
+* @ClassName GymCenterDAO
+*/
 public class GymCenterDAO {
     // Stage 4: Owner adds a new Gym Center for approval
+	/**
+     * Adds a new Gym Center to the database for Admin approval.
+     * Sets the initial approval status to false.
+     * Corresponds to Stage 4 of the owner onboarding flow.
+     *
+     * @param gym the gym center bean object containing details like location, city, and owner ID
+     * @return true if the gym center was successfully added to the database
+     */
     public boolean addGymCenter(GymCenter gym) {
         //String sql = "INSERT INTO GymCenter (centerId, centerName, location, city, pincode, gstNo, ownerEmail, isApproved) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.GYM_CENTRE_ADD)) {
@@ -29,6 +46,12 @@ public class GymCenterDAO {
     }
 
     // Stage 5: Admin fetches pending gym centers to approve
+    /**
+     * Retrieves all Gym Centers that are currently pending approval.
+     * Used by the Admin to view the list of centers needing verification (Stage 5).
+     *
+     * @return a List of GymCenter objects where isApproved is false
+     */
     public List<GymCenter> getPendingGymCenters() {
         List<GymCenter> pendingList = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(SQLConstants.GYM_CENTRE_GET_ALL_PENDING)) {
@@ -40,9 +63,11 @@ public class GymCenterDAO {
     }
 
     /**
-     * Approves a gym center in the database.
-     * @param centerId the ID of the gym
-     * @return boolean true if updated
+     * Approves a specific Gym Center by updating its status in the database.
+     * Once approved, the gym becomes visible to customers for booking.
+     *
+     * @param centerId the unique ID of the gym center to be approved
+     * @return true if the update operation was successful
      */
     public boolean approveGymCenter(String centerId) {
         try (Connection conn = DBConnection.getConnection();
@@ -66,6 +91,13 @@ public class GymCenterDAO {
     }
 
     // Guard Check: Verify if a center is approved before allowing slot addition
+    /**
+     * Checks the current approval status of a specific Gym Center.
+     * Used as a guard check to prevent operations (like adding slots) on unapproved gyms.
+     *
+     * @param centerId the unique ID of the gym center
+     * @return true if the gym is approved, false otherwise
+     */
     public boolean checkApprovalStatus(String centerId) {
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.CHECK_APPROVE_STATUS)) {
             pstmt.setString(1, centerId);
@@ -77,6 +109,13 @@ public class GymCenterDAO {
         return false;
     }
 
+    /**
+     * Retrieves all Gym Centers registered under a specific Gym Owner.
+     * Used to populate the Gym Owner's dashboard with their own centers.
+     *
+     * @param ownerEmail the email of the gym owner
+     * @return a List of GymCenter objects owned by the specified email
+     */
     // Fetch centers for a specific owner to display in their dashboard
     public List<GymCenter> getCentersByOwnerEmail(String ownerEmail) {
         List<GymCenter> ownerCenters = new ArrayList<>();
@@ -89,8 +128,15 @@ public class GymCenterDAO {
         } catch (SQLException e) { e.printStackTrace(); }
         return ownerCenters;
     }
-
+    
     // Used by Customers to view only verified gyms in their city
+    /**
+     * Retrieves a list of approved Gym Centers in a specific city.
+     * Used by Customers to find available and verified gyms in their location.
+     *
+     * @param city the city name to filter by
+     * @return a List of approved GymCenter objects in that city
+     */
     public List<GymCenter> getApprovedCentersByCity(String city) {
         List<GymCenter> cityCenters = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.GYM_CENTRE_GET_BY_CITY)) {
@@ -104,6 +150,12 @@ public class GymCenterDAO {
     }
 
     // Delete a center permanently
+    /**
+     * Permanently deletes a Gym Center from the database based on its ID.
+     *
+     * @param centerId the unique ID of the gym center to remove
+     * @return true if the deletion was successful
+     */
     public boolean deleteCenter(String centerId) {
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.Delete_GYM_CENTR_BY_ID)) {
             pstmt.setString(1, centerId);
@@ -114,6 +166,13 @@ public class GymCenterDAO {
         }
     }
 
+    /**
+     * Retrieves the name of a Gym Center given its ID.
+     * Useful for displaying the gym name in booking details or receipts.
+     *
+     * @param centerId the unique ID of the gym center
+     * @return the name of the gym, or "Unknown Gym" if not found
+     */
     public String getCenterNameById(String centerId) {
         try (Connection conn = DBConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(SQLConstants.GYM_CENTRE_GET_BY_ID)) {
             pstmt.setString(1, centerId);
@@ -124,6 +183,14 @@ public class GymCenterDAO {
     }
 
     // Helper method to reduce code duplication
+    /**
+     * Helper method to map a SQL ResultSet row to a GymCenter bean object.
+     * Reduces code duplication across multiple fetch methods.
+     *
+     * @param rs the ResultSet cursor pointing to a valid row
+     * @return the mapped GymCenter object
+     * @throws SQLException if a column lookup fails
+     */
     private GymCenter mapResultSetToGymCenter(ResultSet rs) throws SQLException {
         GymCenter gym = new GymCenter(
                 rs.getString("centerId"),

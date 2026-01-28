@@ -13,10 +13,28 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class GymFlipFitCustomerMenu.
+* Handles the user interface and interactions for the Gym Customer.
+* Provides a console-based dashboard for customers to browse gyms, manage bookings,
+* and view their history.
+*
+* @author Mansa
+* @ClassName GymFlipFitCustomerMenu
+*/
 public class GymFlipFitCustomerMenu {
 
     private static final GymCustomerInterface customerService = new GymCustomerImpl();
 
+    /**
+     * Show customer menu.
+     * Displays the main dashboard options for the Customer and handles navigation.
+     * Loops until the customer chooses to logout.
+     *
+     * @param scanner the shared Scanner instance for reading user input
+     * @param userId the unique ID (email) of the logged-in customer
+     */
     public static void showCustomerMenu(Scanner scanner, String userId) {
         boolean exit = false;
         while (!exit) {
@@ -53,6 +71,12 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
+    /**
+     * View gyms by city.
+     * Prompts the user for a city name and displays all approved gym centers in that location.
+     *
+     * @param scanner the shared Scanner instance
+     */
     private static void viewGymsByCity(Scanner scanner) {
         System.out.print("Enter City Name: ");
         String city = scanner.next();
@@ -71,6 +95,13 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
+    /**
+     * View slots.
+     * Prompts the user for a center ID and date, then displays available slots.
+     * Handles date parsing and format validation.
+     *
+     * @param scanner the shared Scanner instance
+     */
     private static void viewSlots(Scanner scanner) {
         System.out.print("Enter Center ID: ");
         String centerId = scanner.next();
@@ -95,6 +126,14 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
+    /**
+     * Create booking.
+     * Handles the booking creation flow including input collection, slot validation,
+     * conflict detection, and final confirmation.
+     *
+     * @param scanner the shared Scanner instance
+     * @param userId the ID of the customer making the booking
+     */
     private static void createBooking(Scanner scanner, String userId) {
         System.out.print("Enter Center ID: ");
         String centerId = scanner.next();
@@ -142,6 +181,12 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
+    /**
+     * View bookings.
+     * Fetches and displays a formatted list of all bookings for the current user.
+     *
+     * @param email the email of the customer
+     */
     private static void viewBookings(String email) {
         List<Booking> myBookings = customerService.viewBookings(email);
         if (myBookings.isEmpty()) {
@@ -155,6 +200,13 @@ public class GymFlipFitCustomerMenu {
         }
     }
 
+    /**
+     * Cancel booking.
+     * Displays current bookings and prompts the user to enter a Booking ID to cancel.
+     *
+     * @param scanner the shared Scanner instance
+     * @param userEmail the email of the customer
+     */
     private static void cancelBooking(Scanner scanner, String userEmail) {
         viewBookings(userEmail);
         System.out.print("\nEnter Booking ID to cancel: ");

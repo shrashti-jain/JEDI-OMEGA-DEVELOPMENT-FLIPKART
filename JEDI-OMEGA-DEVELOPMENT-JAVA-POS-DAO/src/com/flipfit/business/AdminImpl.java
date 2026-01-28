@@ -8,19 +8,28 @@ import com.flipfit.dao.GymCenterDAO;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//TODO: Auto-generated Javadoc
 /**
- * Implementation of Admin operations for the FlipFit system.
- * This class handles the approval of gym owners and centers,
- * as well as user management tasks.
- * * @author YourName
- * @version 1.0
- */
+* The Class AdminImpl.
+* Implementation of Admin operations for the FlipFit system.
+* This class handles the approval of gym owners and centers,
+* as well as user management tasks using DAO integration.
+*
+* @author Krishna Nirvas
+* @ClassName AdminImpl
+*/
 public class AdminImpl implements AdminInterface {
 
 
     private UserDAO userDAO = new UserDAO();
     private GymCenterDAO gymCenterDAO = new GymCenterDAO();
 
+    /**
+     * Gets the pending owners.
+     * Fetches a list of gym owners who have registered but are not yet approved.
+     *
+     * @return the list of pending owners
+     */
     @Override
     public List<User> getPendingOwners() {
         // Fetches owners where isApproved = false from User table
@@ -29,8 +38,10 @@ public class AdminImpl implements AdminInterface {
 
     /**
      * Approves a pending gym owner based on their email.
-     * * @param email The unique email address of the gym owner
-     * @return boolean True if approval was successful, false otherwise
+     * Validates the owner's request and updates their status in the database.
+     *
+     * @param email The unique email address of the gym owner
+     * @return true, if successful
      */
     @Override
     public boolean approveOwner(String email) {
@@ -42,12 +53,25 @@ public class AdminImpl implements AdminInterface {
         return false;
     }
 
+    /**
+     * Gets the pending centers.
+     * Retrieves all gym centers that are currently waiting for admin validation.
+     *
+     * @return the list of pending gym centers
+     */
     @Override
     public List<GymCenter> getPendingCenters() {
         // Stage 5: Fetches centers where isApproved = false
         return gymCenterDAO.getPendingGymCenters();
     }
 
+    /**
+     * Approves center.
+     * Verifies the Gym Center details (GST, Location) and activates it in the system.
+     *
+     * @param centerId the center id to approve
+     * @return true, if approval was successful
+     */
     @Override
     public boolean approveCenter(String centerId) {
         // Admin verifies GST and Location details
@@ -59,12 +83,26 @@ public class AdminImpl implements AdminInterface {
     }
 
     // In AdminImpl.java
+    /**
+     * Remove owner.
+     * Permanently deletes a gym owner's account from the system.
+     *
+     * @param email the email of the owner to remove
+     * @return true, if the user was successfully deleted
+     */
     @Override
     public boolean removeOwner(String email) {
         // This should call UserDAO to delete the user record
         return userDAO.deleteUserByEmail(email);
     }
 
+    /**
+     * Remove center.
+     * Permanently deletes a gym center from the database.
+     *
+     * @param centerId the center id to delete
+     * @return true, if the center was successfully removed
+     */
     @Override
     public boolean removeCenter(String centerId) {
         // Permanently deletes a center from the database
@@ -73,8 +111,10 @@ public class AdminImpl implements AdminInterface {
 
     /**
      * Retrieves owners based on approval status using Lambda filter.
-     * @param approved Boolean status to filter by
-     * @return List of Gym Owners
+     * Utilizes Java Streams to filter the full list of owners in memory.
+     *
+     * @param approved Boolean status to filter by (true for approved, false for pending)
+     * @return List of Gym Owners matching the status
      */
     public List<User> getOwnersByStatus(boolean approved) {
         // 1. Fetch all users with role 'OWNER' from DB
@@ -88,8 +128,10 @@ public class AdminImpl implements AdminInterface {
 
     /**
      * Retrieves gym centers based on approval status using Lambda filter.
-     * @param approved Boolean status to filter by
-     * @return List of Gym Centers
+     * Utilizes Java Streams to filter the full list of centers in memory.
+     *
+     * @param approved Boolean status to filter by (true for approved, false for pending)
+     * @return List of Gym Centers matching the status
      */
     public List<GymCenter> getGymCentersByStatus(boolean approved) {
         // 1. Fetch every gym center from the database

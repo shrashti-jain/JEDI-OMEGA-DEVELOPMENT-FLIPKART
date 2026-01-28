@@ -11,10 +11,28 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+//TODO: Auto-generated Javadoc
+/**
+* The Class GymFlipFitOwnerMenu.
+* Handles the user interface and interactions for the Gym Owner.
+* Provides a console-based dashboard for owners to add centers, manage slots,
+* and check approval statuses.
+*
+* @author Mansa
+* @ClassName GymFlipFitOwnerMenu
+*/
 public class GymFlipFitOwnerMenu {
 
     private static final GymOwnerInterface ownerService = new GymOwnerImpl();
 
+    /**
+     * Show owner menu.
+     * Displays the main dashboard options for the Gym Owner and handles navigation.
+     * Loops until the owner chooses to logout.
+     *
+     * @param scanner the shared Scanner instance for reading user input
+     * @param ownerEmail the email of the logged-in owner
+     */
     public static void showOwnerMenu(Scanner scanner, String ownerEmail) {
         boolean exit = false;
         while (!exit) {
