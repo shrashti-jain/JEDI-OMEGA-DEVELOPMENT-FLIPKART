@@ -1,109 +1,126 @@
 package com.flipfit.business;
 
-import com.flipfit.bean.Slot;
 import com.flipfit.bean.GymCenter;
+import com.flipfit.bean.Slot;
+import com.flipfit.dao.GymCenterDAO;
+import com.flipfit.dao.GymCenterDAOImpl;
+import com.flipfit.dao.GymOwnerDAO;
+import com.flipfit.dao.GymOwnerDAOImpl;
+import com.flipfit.dao.SlotDAO;
+import com.flipfit.dao.SlotDAOImpl;
+import com.flipfit.exception.ApprovalPendingException;
+import com.flipfit.exception.FlipFitException;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.List;
 
+/**
+ * Enhanced Gym Owner Business Logic.
+ * Manages gym center and slot lifecycles with strict approval checks.
+ * * @author Shreya / Krishna Nirvas (Integrated)
+ * @ClassName "GymOwnerImpl"
+ */
 public class GymOwnerImpl implements GymOwnerInterface {
 
-    // Static lists act as our database for the session
-    private static final List<Slot> allSlots = new ArrayList<>();
-    private static final List<GymCenter> allCenters = new ArrayList<>();
-    private static final Map<String, List<Slot>> centerSlotsMap = new HashMap<>();
+    private final GymCenterDAO gymCenterDAO = new GymCenterDAOImpl();
+    private final SlotDAO slotDAO = new SlotDAOImpl();
+    private final GymOwnerDAO gymOwnerDAO = new GymOwnerDAOImpl();
 
-
+    /**
+     * Adds a new gym center for an owner.
+     * MIGRATED LOGIC: Validates owner approval status before submission.
+     */
+    /**
+     * Adds a new gym center for an owner.
+     * Synchronized with the 7-parameter interface method and Integer-ID architecture.
+     */
     @Override
-    public void addCenter(String name, String ownerEmail, String city) {
-        // In the client call, we'll pass city as location for simplicity or add a field
-        String id = "C" + (allCenters.size() + 1);
-        GymCenter newCenter = new GymCenter(id, name, "Default Location", city, ownerEmail);
-        allCenters.add(newCenter);
-        System.out.println("Request sent for Center: " + name + " (ID: " + id + ")");
-    }
+    public void addCenter(int userId, String name, String location, String city, String pincode, String gstNo, int capacity) {
+        // 1. Fetch internal OwnerId based on the logged-in UserId
+        int ownerId = gymOwnerDAO.getOwnerIdByUserId(userId);
 
+        if (ownerId == -1) {
+            throw new ApprovalPendingException("Gym Owner profile is not yet approved by Admin. Center submission blocked.");
+        }
+
+        // 2. Map to Bean using the 7-parameter constructor
+        // The constructor order is: ownerId, centerName, location, city, pincode, gstNo, capacity
+        GymCenter newCenter = new GymCenter(ownerId, name, location, city, pincode, gstNo, capacity);
+
+        // 3. Persist to database via DAO
+        if (gymCenterDAO.addGymCenter(newCenter)) {
+            System.out.println("Gym Center request submitted successfully for: " + name + " (Capacity: " + capacity + ")");
+        } else {
+            throw new FlipFitException("Database Error: Failed to submit Gym Center details.");
+        }
+    }
+    /**
+     * Adds a time slot to a specific gym center.
+     * MIGRATED FEATURE: Verifies if the SPECIFIC center is approved before adding slots.
+     */
     @Override
-    public void addSlot(String centerId, Slot slot) {
-        allSlots.add(slot);
-        System.out.println("Slot added successfully for Center: " + centerId);
-    }
+    public void addSlot(int centerId, Slot slot) {
+        // 1. Fetch approval status directly from the DB
+        boolean approved = gymCenterDAO.checkApprovalStatus(centerId);
 
-    // Static helper for Customer Service to fetch slots
-    public static List<Slot> getSlotsByCenter(String centerId, Date date) {
-        List<Slot> centerSlots = new ArrayList<>();
-        for (Slot s : allSlots) {
-            // Use a helper to compare only the Year-Month-Day, ignoring time
-            if (s.getCenterId().equalsIgnoreCase(centerId) && isSameDay(s.getDate(), date)) {
-                centerSlots.add(s);
-            }
-        }
-        return centerSlots;
-    }
-
-    // Helper method to compare dates without time
-    public static boolean isSameDay(Date d1, Date d2) {
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
-        return fmt.format(d1).equals(fmt.format(d2));
-    }
-
-    // --- HELPER METHODS FOR OTHER SERVICES ---
-
-    // Used by Admin to see what needs approval
-    public static List<GymCenter> getPendingCenters() {
-        return allCenters.stream().filter(c -> !c.isApproved()).collect(Collectors.toList());
-    }
-
-    // Used by Admin to approve
-    public static boolean approveCenter(String centerId) {
-        for (GymCenter c : allCenters) {
-            if (c.getCenterId().equalsIgnoreCase(centerId)) {
-                c.setApproved(true);
-                return true; // Success!
-            }
-        }
-        return false; // ID not found
-    }
-    public static boolean removeCenter(String centerId) {
-        // removeIf returns true if an element was removed
-        boolean isRemoved = allCenters.removeIf(c -> c.getCenterId().equalsIgnoreCase(centerId));
-
-        if (isRemoved) {
-            // Also clean up any slots associated with this center
-            centerSlotsMap.remove(centerId);
+        if (!approved) {
+            // 2. Throw exception to stop the process
+            throw new ApprovalPendingException("Access Denied: Center ID " + centerId + " is not yet approved by Admin.");
         }
 
-        return isRemoved;
+        // 3. Only proceed if approved is true
+        if (slotDAO.addSlot(slot)) {
+            System.out.println("Slot successfully added to Center: " + centerId);
+        } else {
+            throw new FlipFitException("Failed to save slot to database.");
+        }
+    }
+    /**
+     * Retrieves all gym centers owned by a gym owner.
+     */
+    @Override
+    public List<GymCenter> getCentersByOwner(int userId) {
+        int ownerId = gymOwnerDAO.getOwnerIdByUserId(userId);
+
+        if (ownerId == -1) {
+            throw new ApprovalPendingException("Gym Owner is not approved or does not exist.");
+        }
+
+        return gymCenterDAO.getCentersByOwner(ownerId);
     }
 
+    /**
+     * Verifies if the gym center belongs to the specified user.
+     */
+    @Override
+    public boolean isCenterOwnedByMe(int userId, int centerId) {
+        // 1. Get the internal Owner ID for the logged-in user
+        int ownerId = gymOwnerDAO.getOwnerIdByUserId(userId);
 
-    public static List<GymCenter> getCentersByOwner(String ownerEmail) {
-        // We stream through ALL centers in the system
-        return allCenters.stream()
-                .filter(center -> center.getOwnerEmail().equalsIgnoreCase(ownerEmail))
-                .collect(Collectors.toList());
+        // 2. Fetch the list of centers belonging to this owner
+        List<GymCenter> myCenters = gymCenterDAO.getCentersByOwner(ownerId);
+
+        // 3. Check if the requested centerId exists in their list
+        return myCenters.stream().anyMatch(c -> c.getCenterId() == centerId);
     }
 
-    // Used by Customer to see only approved gyms in their city
-    public static List<GymCenter> getApprovedCentersByCity(String city) {
-        return allCenters.stream()
-                .filter(c -> c.isApproved() && c.getCity().equalsIgnoreCase(city))
-                .collect(Collectors.toList());
+    /**
+     * MIGRATED FEATURE: Checks approval status of a specific center.
+     */
+    @Override
+    public boolean isCenterApproved(int centerId) {
+        return gymCenterDAO.checkApprovalStatus(centerId);
     }
 
-    public static Slot getSlotById(String slotId) {
-        return allSlots.stream()
-                .filter(s -> s.getSlotId().equalsIgnoreCase(slotId))
-                .findFirst()
-                .orElse(null);
+    // --- STATIC HELPERS (Used by Customer Business Layer) ---
+
+    public static List<Slot> getSlotsByCenter(int centerId, Date date) {
+        SlotDAO sDAO = new SlotDAOImpl();
+        return sDAO.getSlotsByCenterAndDate(centerId, date);
     }
 
-    public static String getCenterNameById(String centerId) {
-        return allCenters.stream()
-                .filter(c -> c.getCenterId().equalsIgnoreCase(centerId))
-                .map(GymCenter::getCenterName)
-                .findFirst()
-                .orElse("Unknown Gym");
+    public static String getCenterNameById(int centerId) {
+        GymCenterDAO gDAO = new GymCenterDAOImpl();
+        return gDAO.getCenterNameById(centerId);
     }
 }

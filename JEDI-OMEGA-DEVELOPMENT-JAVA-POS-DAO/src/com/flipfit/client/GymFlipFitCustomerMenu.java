@@ -3,36 +3,77 @@ package com.flipfit.client;
 import com.flipfit.bean.Booking;
 import com.flipfit.bean.GymCenter;
 import com.flipfit.bean.Slot;
+import com.flipfit.bean.Waitlist;
 import com.flipfit.business.GymCustomerInterface;
 import com.flipfit.business.GymCustomerImpl;
-import com.flipfit.business.GymOwnerImpl;
+import com.flipfit.business.UserInterface;
+import com.flipfit.business.UserImpl;
+import com.flipfit.exception.FlipFitException;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.text.ParseException;
 
+/**
+ * Enhanced Customer Dashboard Menu.
+ * Fully synchronized with session-based userEmail and Integer-ID logic.
+ */
 public class GymFlipFitCustomerMenu {
 
-    // Added 'final' to resolve warning
     private static final GymCustomerInterface customerService = new GymCustomerImpl();
+    private static final UserInterface userService = new UserImpl();
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-    public static void showCustomerMenu(Scanner scanner, String userId) {
+    /**
+     * Displays the customer dashboard menu.
+     * @param scanner Scanner for user input
+     * @param userEmail The actual email of the logged-in user
+     */
+    public static void showCustomerMenu(Scanner scanner, String userEmail) {
+        // Resolve email to userId once at the beginning of the session
+        int userId = userService.getUserIdByEmail(userEmail);
         boolean exit = false;
+
         while (!exit) {
-            System.out.println("\n<----- Customer Dashboard (" + userId + ") ----->");
-            System.out.println("1. View Gym Centers by City\n2. View Slot Availability\n3. Book a Slot\n4. View My Bookings\n5. Cancel Booking\n6. Logout");
-            System.out.print("Enter choice: ");
+            System.out.println("\n========================================");
+            System.out.println("      CUSTOMER DASHBOARD (" + userEmail + ") ");
+            System.out.println("========================================");
+            System.out.println("1. View Gym Centers by City");
+            System.out.println("2. View Slot Availability");
+            System.out.println("3. Book a Slot");
+            System.out.println("4. View My Bookings");
+            System.out.println("5. Cancel Booking");
+            System.out.println("6. Logout");
+            System.out.print("\nEnter choice: ");
+
+            if (!scanner.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a number (1-6).");
+                scanner.next();
+                continue;
+            }
 
             int choice = scanner.nextInt();
-            switch (choice) {
-                case 1 -> viewGymsByCity(scanner);
-                case 2 -> viewSlots(scanner);
-                case 3 -> createBooking(scanner, userId);
-                case 4 -> viewBookings(userId);
-                case 5 -> cancelBooking(scanner,userId);
-                case 6 -> { System.out.println("Logging out..."); exit = true; }
-                default -> System.out.println("Invalid option.");
+            scanner.nextLine(); // Clear buffer
+
+            try {
+                switch (choice) {
+                    case 1 -> viewGymsByCity(scanner);
+                    case 2 -> viewSlots(scanner);
+                    case 3 -> createBooking(scanner, userId, userEmail); // Pass email for conflict check
+                    case 4 -> viewBookings(userEmail); // Pass original email directly
+                    case 5 -> cancelBooking(scanner, userId, userEmail);
+                    case 6 -> {
+                        System.out.println("Logging out...");
+                        exit = true;
+                    }
+                    default -> System.out.println("Invalid option. Please choose 1-6.");
+                }
+            } catch (FlipFitException e) {
+                System.out.println("❌ " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("❌ System Error: " + e.getMessage());
             }
         }
     }
@@ -40,121 +81,142 @@ public class GymFlipFitCustomerMenu {
     private static void viewGymsByCity(Scanner scanner) {
         System.out.print("Enter City Name: ");
         String city = scanner.next();
+
         List<GymCenter> centers = customerService.viewCenters(city);
-        System.out.println("<-----Available Gyms for city- " + city + "----->");
-        centers.forEach(c -> System.out.println("ID: " + c.getCenterId() + " | Name: " + c.getCenterName()));
+        if (centers.isEmpty()) {
+            System.out.println("No approved gyms found in " + city);
+        } else {
+            System.out.println("\n--- Approved Gyms in " + city + " ---");
+            System.out.printf("%-10s | %-20s | %-15s\n", "ID", "Name", "Location");
+            System.out.println("---------------------------------------------");
+            centers.forEach(c -> System.out.printf("%-10d | %-20s | %-15s\n",
+                    c.getCenterId(), c.getCenterName(), c.getLocation()));
+        }
     }
 
     private static void viewSlots(Scanner scanner) {
         System.out.print("Enter Center ID: ");
-        String centerId = scanner.next();
+        int centerId = scanner.nextInt();
         System.out.print("Enter Date (yyyy-MM-dd): ");
         String dateStr = scanner.next();
 
         try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr); // Use dateStr
+            Date date = sdf.parse(dateStr);
             List<Slot> slots = customerService.viewSlotAvailability(centerId, date);
-            System.out.println("<-----Available slots for date- " + date + "----->");
-            slots.forEach(s -> System.out.println("SLOT ID- " + s.getSlotId() + " Time: " + s.getStartTime() + " - " + s.getEndTime() +
-                    " | Remaining Seats: " + s.getAvailableSeats()));
-        } catch (Exception e) {
-            System.out.println("Invalid date format.");
+
+            System.out.println("\n--- Available Slots for " + dateStr + " ---");
+            System.out.printf("%-10s | %-20s | %-15s\n", "Slot ID", "Time", "Seats Left");
+            System.out.println("---------------------------------------------");
+            slots.forEach(s -> System.out.printf("%-10d | %-20s | %-15d\n",
+                    s.getSlotId(), s.getStartTime() + " - " + s.getEndTime(), s.getAvailableSeats()));
+        } catch (ParseException e) {
+            System.out.println("Invalid date format. Please use yyyy-MM-dd");
         }
     }
 
-    private static void createBooking(Scanner scanner, String userId) {
+    private static void createBooking(Scanner scanner, int userId, String userEmail) {
         System.out.print("Enter Center ID: ");
-        String centerId = scanner.next();
+        int centerId = scanner.nextInt();
         System.out.print("Enter Slot ID: ");
-        String slotId = scanner.next();
-        System.out.print("Enter Date for booking (yyyy-MM-dd): ");
+        int slotId = scanner.nextInt();
+        System.out.print("Enter Date (yyyy-MM-dd): ");
         String dateStr = scanner.next();
 
         try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
-            // A. Get the Slot details first to know the time
-            Slot selectedSlot = GymOwnerImpl.getSlotById(slotId);
+            Date date = sdf.parse(dateStr);
+
+            // 1. FRESH DATA CHECK
+            Slot selectedSlot = customerService.getSlotById(slotId);
             if (selectedSlot == null) {
-                System.out.println("Slot not found.");
+                System.out.println("❌ Error: Slot ID " + slotId + " does not exist.");
                 return;
             }
-            String slotTime = selectedSlot.getStartTime() + " - " + selectedSlot.getEndTime();
 
-            // B. Check for Conflict
-            Booking conflict = customerService.checkConflict(userId, date, slotTime);
+            // 2. CONFLICT CHECK
+            String slotTimeStr = selectedSlot.getStartTime().toString();
+            Booking conflict = customerService.checkConflict(userId, date, slotTimeStr);
 
             if (conflict != null) {
-                System.out.println("\n[CONFLICT] You already have a booking at " + slotTime + " in " + conflict.getGymName());
-                System.out.print("Would you like to cancel the previous booking and proceed? (yes/no): ");
-                String confirm = scanner.next().toLowerCase();
-                scanner.nextLine();
-
-                if (confirm.equals("yes")) {
+                System.out.println("\n[CONFLICT] You are already booked at " + slotTimeStr + " in " + conflict.getGymName());
+                System.out.print("Replace existing booking? (yes/no): ");
+                if (scanner.next().equalsIgnoreCase("yes")) {
                     customerService.cancelBooking(conflict.getBookingId());
-                    System.out.println("Previous booking cancelled.");
                 } else {
-                    System.out.println("New booking aborted.");
                     return;
                 }
             }
 
-            // C. Finally, call the actual booking method
+            // 3. WAITLIST LOGIC (Handled here in the Menu)
+            if (selectedSlot.getAvailableSeats() <= 0) {
+                System.out.println("\n⚠️ This slot is currently FULL.");
+                System.out.print("Join Waitlist? (yes/no): ");
+                if (scanner.next().equalsIgnoreCase("yes")) {
+                    customerService.addWaitlist(userId, slotId, date);
+                    System.out.println("✅ Added to Waitlist!");
+                }
+                return;
+            }
+
+            // 4. CALL SERVICE (Now safe because we checked seats)
             Booking booking = customerService.bookSlot(userId, slotId, centerId, date);
             if (booking != null) {
-                System.out.println("Booking Success! ID: " + booking.getBookingId());
+                System.out.println("\nSUCCESS! Booking Confirmed. ID: " + booking.getBookingId());
+            } else {
+                // This only triggers if a race condition happened (someone took the last seat 1ms before you)
+                System.out.println("❌ Failed to secure seat. It may have just filled up.");
             }
+
         } catch (Exception e) {
-            System.out.println("Invalid date format. Use yyyy-MM-dd");
+            System.out.println("❌ Error: " + e.getMessage());
         }
     }
 
-    private static void viewBookings(String email) {
-        List<Booking> myBookings = customerService.viewBookings(email);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
-
-        if (myBookings.isEmpty()) {
-            System.out.println("No active bookings found for: " + email);
-        } else {
-            System.out.println("\n----------------------- MY BOOKINGS -----------------------");
-            System.out.printf("%-12s | %-15s | %-12s | %-15s | %-10s\n",
-                    "ID", "Gym Name", "Date", "Time", "Status");
-            System.out.println("-----------------------------------------------------------");
-
-            for (Booking b : myBookings) {
-                System.out.printf("%-12s | %-15s | %-12s | %-15s | %-10s\n",
-                        b.getBookingId(),
-                        b.getGymName(),
-                        dateFormat.format(b.getSlotDate()),
-                        b.getSlotTime(),
-                        b.getStatus());
-            }
-        }
-    }
-
-    private static void cancelBooking(Scanner scanner, String userEmail) {
-        // 1. Show the user their current bookings so they know the IDs
+    private static void viewBookings(String userEmail) {
+        // 1. Fetch Confirmed Bookings
         List<Booking> myBookings = customerService.viewBookings(userEmail);
 
-        if (myBookings.isEmpty()) {
-            System.out.println("You have no active bookings to cancel.");
+        // 2. Fetch Waitlist Entries
+        // (Ensure your Service/DAO returns an empty list, not null, if none exist)
+        List<Waitlist> myWaitlist = customerService.viewWaitlist(userEmail);
+
+        // 3. Check if EVERYTHING is empty
+        if (myBookings.isEmpty() && myWaitlist.isEmpty()) {
+            System.out.println("❌ No current bookings or waitlist entries found for " + userEmail);
             return;
         }
 
-        System.out.println("\n--- Your Active Bookings ---");
-        myBookings.forEach(b -> System.out.println("ID: " + b.getBookingId() + " | Gym: " + b.getGymName() + " | Status: " + b.getStatus()));
+        // --- DISPLAY CONFIRMED SECTION ---
+        if (!myBookings.isEmpty()) {
+            System.out.println("\n----------------------- YOUR CONFIRMED BOOKINGS -----------------------");
+            System.out.printf("%-15s | %-15s | %-12s | %-12s | %-10s\n", "Booking ID", "Gym", "Date", "Time", "Status");
+            System.out.println("-".repeat(71));
+            myBookings.forEach(b -> System.out.printf("%-15s | %-15s | %-12s | %-12s | %-10s\n",
+                    b.getBookingId(), b.getGymName(), new SimpleDateFormat("dd-MM-yy").format(b.getSlotDate()), b.getSlotTime(), b.getStatus()));
+        }
 
-        // 2. Ask for the ID to cancel
-        System.out.print("\nEnter the Booking ID you wish to cancel: ");
+        // --- DISPLAY WAITLIST SECTION ---
+        if (!myWaitlist.isEmpty()) {
+            System.out.println("\n----------------------- YOUR WAITLIST (PENDING) -----------------------");
+            System.out.printf("%-15s | %-15s | %-12s | %-10s\n", "Waitlist ID", "Slot ID", "Date", "Status");
+            System.out.println("-".repeat(71));
+            myWaitlist.forEach(w -> System.out.printf("%-15s | %-15s | %-12s | %-10s\n",
+                    "WL-" + w.getWaitlistId(),
+                    w.getCenterName(),
+                    new SimpleDateFormat("dd-MM-yy").format(w.getBookingDate()),
+                    w.getSlotTime()));
+        }
+        System.out.println("-----------------------------------------------------------------------");
+    }
+
+    private static void cancelBooking(Scanner scanner, int userId, String userEmail) {
+        viewBookings(userEmail);
+        System.out.print("\nEnter Booking ID to cancel: ");
         String bid = scanner.next();
-        scanner.nextLine(); // Clear the buffer
 
-        // 3. Call the service
-        boolean isCancelled = customerService.cancelBooking(bid);
-
-        if (isCancelled) {
-            System.out.println("SUCCESS: Your booking has been cancelled and the seat is now available for others.");
+        if (customerService.cancelBooking(bid)) {
+            System.out.println("Booking cancelled. Seat restored.");
         } else {
-            System.out.println("FAILURE: Could not cancel booking. Please check the ID and try again.");
+            System.out.println("Cancellation failed. Check ID.");
         }
     }
 }
