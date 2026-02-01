@@ -40,7 +40,7 @@ This repository contains the complete implementation of the **FlipFit Gym Manage
 ### 1. Database Setup
 Execute the SQL scripts found in the `POS-DAO` folder to initialize your schema.
 ```sql
-CREATE DATABASE flipfit_db;
+CREATE DATABASE flipfit;
 -- Import the provided SQL dump to create tables: 
 -- users, gym_center, slot, booking, waitlist
 ```
